@@ -1,0 +1,5 @@
+USB caps
+LCD VCC should be 5v
+Reset pads
+Flash cap 
+Flash 1.8v pour

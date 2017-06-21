@@ -1,0 +1,1222 @@
+
+
+include(ga144.hdr)
+\include(708out.hdr)
+
+\ 128 * 128 = 16384 pixels 
+
+
+\ -- Display specific values
+define(PIXELS, 16383)   \ 1 less than actual num pixels, for loops
+define(PIX_H, 127) \ 1 less for loops
+define(PIX_V, 127) \ 1 less for loops
+define(NEG_PIX_V, -127)
+define(NEG_PIX_H, -127)
+
+\ -- Control pin modes
+define(SCI_RESET, 0x2002A)
+define(DB_RDX, 0x14555)
+define(DB_WRX, 0x15555)
+
+\ -- OpCodes --
+define(W_LINE, 0x00001)
+define(VCOM, 0x00000)
+define(CLRSCN, 0x20004)
+
+\ -- Colors
+define(BLACK, 0x0)
+define(RED, 0x4)
+define(GREEN, 0x2)
+define(YELLOW, 0x6)
+define(BLUE, 0x1)
+define(MAGENTA, 0x5)
+define(CYAN, 0x3)
+define(WHITE, 0x7)
+
+\ -- SPI Flash
+define(SPI_SEL, 0xCC)
+define(SPI_WR8, 0xC2) \8obits
+define(SPI_RD18, 0xD9) \18ibits
+
+
+
+---------------------------- 708 ----------------------------
+: setup
+    call setT    
+    @p b!
+    io
+    @p a!
+    SOUTH \rdl-    
+    @p push
+    2              \num words to send
+: tx     
+    @ call txCell
+    next tx
+    @p call txCell
+    0x00947   
+    jump 0xAA       \ROM cold, might freeze this node?
+
+: setT
+    @p drop !p ;
+: txBit \ t x n - t x 
+    !b @p push
+    0
+    jump 0xC8 
+    
+: txByte \ t x - t y
+    @p call txBit
+    3
+    drop 
+    @p push
+    7
+: txLoop    
+    dup @p and @p
+    1
+    3
+    or call txBit
+    drop 
+    2/ next txLoop
+    @p call txBit
+    2
+    drop  
+    ;
+
+: txCell
+    @p call txByte
+    0xA5
+    drop call txByte
+    call txByte
+    @p and
+    3
+    call txByte    
+    drop ;      
+
+
+---------------------------- 705 ----------------------------
+\- FLASH ---------
+@p b!
+io
+@p a!
+EAST 
+
+jump 0
+
+: reset
+    \setup 0 delay = 98Mhz
+    dup dup or @p           
+    0x24000
+    call SPI_SEL   \ROM select
+    call SPI_WR8   \ROM 8obits
+    call SPI_WR8
+    call SPI_WR8
+    call SPI_WR8
+    drop
+: read    
+    call SPI_RD18   \ROM 18ibits    
+    !
+    
+
+: SPI_DESEL
+    @p !b ;
+    0x0002F
+
+
+---------------------------- 706 ----------------------------
+WIRE(WEST, EAST)        
+---------------------------- 707 ----------------------------
+\div test
+@p b!
+EAST
+@p a!
+0
+
+jump 0
+
+: main
+    @p @p
+    0x3F8000 \128 in 8.8 format
+    0x3FFFF0 \-16 in 8.0 format
+    call -/mod \--u/mod
+    !b !b 
+    jump main
+
+
+: -/mod
+    push -if pos
+    call neg
+    pop call /mod
+    call neg
+    ;
+: pos    
+    pop
+: /mod \nd-rq 
+    a! @p push
+    0x3FFFF 
+: /loop    
+    dup a . + 
+    -if /_
+    drop pop - ; 
+: /_
+    next /loop
+
+: neg
+    - @p . +
+    1
+    ;    
+
+---------------------------- 608 ----------------------------
+\core
+@p b!
+NORTH
+@p a!
+WEST
+
+jump 0
+
+: main
+    @p call push
+    0x69
+    @p call push
+    0x68
+    @p call push
+    0x67
+    call pop
+    !b call pop
+    !b call pop    
+    !b jump main
+
+
+: pop
+    @p ! @ ;
+        @+ !p 
+
+: push
+    @p ! ! ;         
+        @p a pop ;  
+    
+
+
+
+---------------------------- 607 ----------------------------
+\d_stk
+@p b!
+EAST
+@p a!
+63
+LOADR_2(-1, 0)
+LOADD_2(-1, -1)
+
+jump EAST
+
+: dec
+    + a! ! 
+    jump EAST
+
+    
+
+---------------------------- 609 ----------------------------
+\r_stk
+@p b!
+WEST
+@p a!
+0
+
+jump WEST
+
+
+
+---------------------------- 508 ----------------------------
+WIRE(SOUTH, NORTH)
+---------------------------- 408 ----------------------------
+WIRE(SOUTH, NORTH)
+---------------------------- 308 ----------------------------
+WIRE(SOUTH, NORTH)
+---------------------------- 208 ----------------------------
+WIRE(WEST, SOUTH)    
+---------------------------- 205 ----------------------------
+
+@p b!
+EAST
+
+jump 0
+
+: test
+    @p !b 
+    0       \clear
+    @p push    
+    127       
+: row_loop
+    pop dup push
+    - @p . +  
+    128
+    2* 2* 2*
+    2* 
+    @p or !b \set row
+    0x20003    
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    \send draw list
+    @p push @p
+    17
+    draw_list
+    a!
+    @+ !b unext
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    \sendline
+    pop dup push
+    - @p . +  
+    129
+    2* 2* 2*
+    2* 2* 2*
+    2* 2* @p 
+    1
+    + !b 
+    next row_loop 
+: stall     
+    jump stall    
+
+
+: draw_list    
+    0x3F808 \rect 128y - 0y 
+    0x13F80 \filled blue 128x - 0x
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x20138 \rect 64y - 19y
+    0x22013 \unfilled black 64x - 19x 
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x1F948 \rect 63y - 20y
+    0x15F94 \filled magenta 63x - 20x    
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x3F9F7 \circ 127x, 31r
+    0x04200 \filled red 4s, 127y
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x001F7 \circ 0x, 31r
+    0x0C27F \filled yellow 4s, 127y
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x1F9F7 \circ 63x, 31r
+    0x0823F \filled green 4s, 63y
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x3F9F7 \circ 127x, 31r
+    0x20200 \unfilled black 4s, 127y
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x001F7 \circ 0x, 31r
+    0x2027F \unfilled black 4s, 127y
+    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    0x1F9F7 \circ 63x, 31r
+    0x2023F \unfilled black 4s, 63y
+    
+
+---------------------------- 206 ----------------------------
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\ Controller Commands
+\
+\ prim done               |000000000000000000|
+\ sendline           |000|7b linenum|00000001|
+\ pixel         |1|3b color|000|7b coord|0010| 
+\ set row            |1000000|7b linenum|0011|
+\ clear                   |0000000000000|0100|                                       
+
+\ Geometric Types
+\ 
+\ line          |7b Y1|7b Y0|0101|    |3b C|7b X1|7b X0|
+\ char          |5b X|5b L|4b Y|0110|    ~|3b C1|6b I1|3b C0|6b I0| 
+\ circle        |7b  X|7b  R|0111|    |1bfill|3b C|7b 128/R|7b Y|
+\ rectangle     |7b Y1|7b Y0|1000|    |1bfill|3b C|7b X1|7b X0|
+\ tri           |7b X0|7b Y0|1001|    |3b C|7b X1|7b Y1|     |0000|7b X2|7b Y2|
+\ bitmap        |7b  X|7b  Y|1010|    |0000000000|7b len|
+
+jump 11
+
+: table
+    jump main       \prim done
+    !b jump fast    \sendline
+    !b jump fast    \pixel
+    !b jump fast
+    !b jump fast
+    jump line     
+    jump char     
+    jump circle   
+    jump rectangle
+    jump tri      
+    jump bitmap   
+
+
+
+: main
+    @p a!
+    --l-
+: wait
+    @p b! 
+    EAST 
+: fast    
+    @ dup @p 
+    0x0000F
+    and push ex
+    jump main    
+
+: tri 
+: bitmap     
+
+
+: set_row
+    2/ 2/ 2/
+    2/ dup @p 
+    SOUTH       
+    a! ! @p 
+    NORTH 
+    a! ! ;
+    
+: rectangle
+: circle     
+    !b @ !b
+    jump main 
+
+: char
+    @p a!
+    NORTH
+    jump geo_2     
+: line 
+    @p a!
+    SOUTH
+: geo_2
+    2/ 2/ 2/ 
+    2/ @p and @p
+    0x03FFF 
+    WEST    
+    b! ! @b 
+    ! jump wait 
+
+
+---------------------------- 207 ----------------------------
+
+jump 11
+
+: table
+    jump main       \prim done
+    !b jump fast    \sendline
+    !b jump fast    \pixel
+    jump set_row
+    jump clear
+    jump line     
+    jump char     
+    jump circle   
+    jump rectangle
+    jump tri      
+    jump bitmap   
+
+
+: main
+    @p a!
+    rd-u
+: wait
+    @p b! 
+    EAST 
+: fast    
+    @ dup @p 
+    0x0000F
+    and push ex
+    jump main
+
+
+: tri 
+
+: bitmap 
+: char     
+: line   
+    
+: clear\needs to convert at end of pipe
+    dup or !b  
+    jump fast
+
+: set_row
+    \dup !b 2/
+    \2/ 2/ 2/ dup
+    \@p a! ! @p    
+    \EAST
+    \WEST
+    \a! ! ;
+    2/ 2/ 2/
+    2/ dup @p 
+    SOUTH       
+    a! ! @p 
+    NORTH 
+    a! ! ;
+    
+: circle     
+    @p a!
+    NORTH
+    jump geo_2  
+
+: rectangle
+    @p a!
+    SOUTH
+: geo_2
+    2/ 2/ 2/ 
+    2/ @p and @p
+    0x03FFF 
+    WEST    
+    b! ! @b 
+    ! jump wait 
+
+    
+
+---------------------------- 306 ----------------------------
+\ line  |7b dY|7b Y0|   |3b C|7b dX|7b X0|
+
+
+\@p b!
+\NORTH
+\@p a!
+\0x0007F
+\
+\\jump 3
+\\
+\\
+\\
+\: row!        
+\    @p drop !p ;
+\: test               
+\    @p over a  
+\    0
+\    and + 
+\    -if done          \cull Y0     
+\    dup - push   
+\    over call slide
+\    + - 
+\    -if draw          \cull Y1  P1 
+\: done
+\    dup or !b \primdone
+\    @p a!
+\    0x0007F
+\: main
+\    @b -if test
+\    a and -
+\    call row!     \stores row        
+\    jump main
+\
+\
+\: draw
+\
+\
+\
+\
+\: -/mod
+\    push -if pos
+\    call neg
+\    pop call /mod
+\    call neg
+\    ;
+\: pos    
+\    pop
+\: /mod \nd-rq 
+\    a! @p push
+\    0x3FFFF 
+\: /loop    
+\    dup a . + 
+\    -if /_
+\    drop pop - ; 
+\: /_
+\    next /loop
+\
+\: mul
+\    dup dup or +* 
+\    +* +* +* +* 
+\    +* +* ;    
+\
+\: neg
+\    - @p . +
+\    1
+\    ;      
+\
+\: slide
+\   2/ 2/ 2/
+\   2/ 2/ 2/
+\   2/ ;
+\
+\: send
+\    2* 2* 2* 
+\    2* a or 
+\    !b ; 
+\
+\: templ! \setup pixel template
+\    dup @p and @p
+\    0x1C000
+\    0x20002
+\    or . . .    
+\    @p drop !p ;
+\: templ@
+\    @p ;
+\    0    
+\
+
+
+
+
+---------------------------- 307 ----------------------------
+\ circle        |0000|7b X|7b R|  |1bfill|3b C|7b 128/R|7b Y|
+
+@p a!
+0x0007F \mask
+@p b!
+SOUTH \to pipe
+
+jump 11
+
+
+: row!        
+    @p drop !p ; \chomp and set
+: test                    
+    dup a and @p
+    0     
+    @b dup push     
+    a and . +
+    -if negate    
+: neg        
+    over     
+    + -if draw        
+: done
+    dup or !b \primdone
+    @p a!
+    0x0007F
+: main
+    @b -if test
+    a and - @p
+    1
+    + call row!     
+    jump main  
+
+: draw
+    @p a! !     
+    NORTH
+    pop dup ! 
+    -if draw_fill
+    @ if draw_TorB            
+\draw_edges
+    call setup   
+    dup - @ +  
+    @ a! -  
+    -if cull_R
+    drop call send
+    drop jump test_L
+: cull_R
+    drop drop drop 
+: test_L    
+    - -if done
+    - call send
+    jump done  
+
+: send
+    2* 2* 2* 
+    2* a or 
+    !b ;     
+
+: draw_fill
+    @
+: draw_TorB        
+    call setup      
+    push push
+    -if no_trim_L
+    pop . + 
+    push dup or
+: no_trim_L
+    pop pop 
+    - @ . + 
+    -if no_trim_R
+    + push 
+    jump fill
+: no_trim_R     
+    drop push
+: fill
+    @ a!
+: fill_loop
+    dup pop dup
+    push + 
+    call send
+    next fill_loop
+    jump done
+
+: setup                   
+    2/ ! !   
+    ! 2/ 2/   
+    2/ 2/ 2/
+    2/ 2/ @  
+    over over over 
+    over + push   
+    2* push - + 
+    - pop pop ;    
+
+: negate
+    - @p . +
+    1
+    jump neg
+   
+     
+
+    
+
+---------------------------- 407 ----------------------------
+\Circle table 
+@p b!
+SOUTH
+
+jump 32
+
+: table
+0x02016
+0x02C26
+0x03631
+0x03E3A
+0x04441
+0x04A47
+0x04F4D
+0x05452
+0x05856
+0x05C5A
+0x0605E
+0x06362
+0x06665
+0x06968
+0x06C6B
+0x06E6D
+0x0716F
+0x07372
+0x07474
+0x07675
+0x07877
+0x07978
+0x07A7A
+0x07C7B
+0x07D7C
+0x07D7D
+0x07E7E
+0x07F7E
+0x07F7F
+0x0807F
+0x08080
+0x08080
+
+: scale_i
+    @b a! @b @p            
+    0x03F80        
+    and call mul
+    !b   
+\ lookup_w    
+    @b dup 2/ 
+    a! @p and 
+    0x00001
+    if slot_0
+\ slot_1    
+    @ 2/ 2/ 
+    2/ 2/ 2/
+    2/ 2/ 2/
+    jump scale_r
+: slot_0     
+    @ @p and
+    0x000FF  
+: scale_r
+    @b @p and @p
+    0x1C000    
+    0x20002
+    or push @b
+    a! call mul
+    !b @p !b      
+    0x00080
+    pop !b
+    jump scale_i 
+
+: mul
+    @p push @p
+    6
+    0
+    +* unext ;  
+    
+
+
+
+---------------------------- 107 ----------------------------
+\ rectangle     |0000|7b Y1|7b Y0|    |1b fill|3b C|7b X1|7b X0|
+\                                      0 = filled
+@p b!
+NORTH
+
+LOADR_2(0x0007F,0x0007F)
+
+jump 2
+
+: cull
+    @b drop 
+: done
+    dup or !b \primdone 
+: main
+    @b -if draw
+    pop and
+    call row!
+    jump main 
+
+: draw
+    call row 
+    over pop and  
+    - . +
+    - if draw_TorB 
+    -if cull    
+    drop 2/ 2/
+    2/ 2/ 2/
+    2/ 2/
+    call row
+    - . +
+    - if draw_TorB    
+    -if cull
+    @b -if draw_fill
+: draw_edges
+    call template
+    pop and 2*
+    2* 2* 2*
+    a or !b 
+    2/ 2/ 2/
+    2/ 2/ 2/ 
+    2/ pop and
+    2* 2* 2*
+    2* a or 
+    !b jump done
+
+: draw_TorB
+    @b   
+: draw_fill
+    call template
+    pop and over 
+    2/ 2/ 2/ 
+    2/ 2/ 2/
+    2/ pop and
+    - over . + 
+    - push
+: fill_loop
+    dup pop dup
+    push + 2*
+    2* 2* 2*
+    a or !b
+    next fill_loop
+    jump done 
+
+: template
+    dup @p and @p
+    0x1C000
+    0x20002
+    or a! dup ;    
+
+: row!        
+    @p drop !p ;
+: row
+    @p ;
+    0    
+
+
+
+---------------------------- 108 ----------------------------
+\\\\\\\ LINE BUFFER \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\pix       = |1|3b color|000|7b coord|0010|
+\SENDLINE  = |00|8b linenum|00000001| 
+\clear     = 0 
+
+
+@p b!                      
+SOUTH
+@p a!
+NORTH
+
+LOADR_2(32,32)  \addr of main
+
+jump 32   
+
+: line_buff
+    0x00FFF     \black
+    0x00FFF     \red
+    0x00FFF     \green
+    0x00FFF     \yellow
+    0x00FFF     \blue
+    0x00FFF     \magenta
+    0x00FFF     \cyan
+    0x00FFF     \white     
+    0x00FFF     \black
+    0x00FFF     \red
+    0x00FFF     \green
+    0x00FFF     \yellow
+    0x00FFF     \blue
+    0x00FFF     \magenta
+    0x00FFF     \cyan
+    0x00FFF     \white 
+    0x00FFF     \black
+    0x00FFF     \red
+    0x00FFF     \green
+    0x00FFF     \yellow
+    0x00FFF     \blue
+    0x00FFF     \magenta
+    0x00FFF     \cyan
+    0x00FFF     \white 
+    0x00FFF     \black
+    0x00FFF     \red
+    0x00FFF     \green
+    0x00FFF     \yellow
+    0x00FFF     \blue
+    0x00FFF     \magenta
+    0x00FFF     \cyan
+    0x00FFF     \white     
+ 
+   
+
+: main
+    @p a! @
+    NORTH
+    if clear_screen    
+    -if send_line
+    2/ 2/ 2/
+    2/ dup @p
+    0x3
+    and - @p +
+    4
+    over dup 2/   
+    2/ @p and 
+    0x1F
+    a! over push 
+    2* 2* @p dup
+    0x7000
+    2/ 2/ 2/ unext
+    - @ and
+    ! and over
+    push
+    2/ 2/ 2/ unext 
+    @ . +
+    ! ;
+: send_line
+    !b dup or 
+    a! @p push 
+    31
+: pix    
+    @ !b @p
+    0x00FFF
+    !+ next pix
+    ;
+: clear_screen
+    @p !b ;  
+    CLRSCN
+         
+---------------------------- 008 ----------------------------
+\ This the control node for the LS013B7DH06 LCD 
+\ 
+\
+\ -- IO Ports --
+\ D13    = DISP      - dispay on (show data)
+
+\ 008.17 = SCS       - chip select
+\ 008.03 = SCLK      - serial clock
+\ 008.01 = SI        - serial input
+\
+\ VCOM      = 0x00000
+\ SENDLINE  = |00|8b linenum|00000001| 
+\ CLRSCR    = 0x20004
+\ -----------------------------------------------------------
+
+@p b!                      
+io
+@p a!
+rd--
+
+jump 0    
+
+: init   
+    @p !b     
+    0x2002A             \DISP hi, SCS low
+    call delay  
+: ready
+    @p a!
+    rd--
+    @ @p !b
+    0x3002A             \DISP hi, SCS high
+    call delay 
+    if toggle_vcom
+    -if send_line
+    call send_16        \clear screen
+    jump init
+: send_line 
+    @p a!
+    NORTH   
+    call send_16
+    @p push
+    31
+: line_loop    
+    @ call send_12
+    next line_loop
+    dup dup or 
+    call send_16
+    @p !b     
+    0x2002A             \DISP hi, SCS low    
+    jump ready
+
+
+: toggle_vcom
+    drop call get_vcom
+    @p or dup
+    0x00002    
+    call set_vcom
+    call send_16
+    jump ready
+: set_vcom
+    @p drop !p ;
+: get_vcom
+    @p ;
+    0x00000
+
+
+: send_16
+    @p push
+    15 
+    jump bit_loop
+: send_12    
+    @p push
+    11
+: bit_loop   
+    dup push @p
+    0x00001
+    and @p or dup
+    0x3002A
+    !b @p push   
+    32             \ 2Mhz  
+    . . . unext  
+    @p or 
+    0x00004   
+    !b @p push   
+    28             \ 2Mhz  
+    . . . unext 
+    pop 2/
+    next bit_loop    
+    @p !b ;
+    0x3002A
+  
+
+: delay   
+    @p push
+    0xFF
+    \0x258F6        \ 1ms ?  
+    . . unext ;
+
+
+
+  
+
+---------------------------- 715 ----------------------------
+\\\\\ 32.768 xtal \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+   
+@p b!                      
+io
+@p a!
+NORTH
+
+LOADD_4(0,0)
+
+jump 0
+
+: calib
+    @p @p push 
+    12500
+    200
+: calib_loop    
+    dup @p 
+    5000
+    call osc
+    if setup
+    drop @p . +
+    1
+    next calib_loop
+    ;
+: setup 
+    @p @p @p @p
+    0x800
+    0x30800  
+    0
+    0x20000
+    @p @p @p @p
+    0x800
+    0x30800    
+    0
+    0x20000
+    @p @p
+    0x800
+    0x30800     
+: run
+    !b !b @ 
+    drop jump run    
+
+
+
+: osc \ kn - f
+    push 
+: cycle    
+    @p !b dup
+    0x30000    
+    2/ dup push
+    unext @p !b 
+    0x20000
+    over @p and
+    1
+    + push 
+    unext next cycle
+    dup or !b dup
+    @p push
+    30000
+: test_loop    
+    drop @b -
+    -if hit 
+    next test_loop 
+    ;
+: hit    
+    dup or pop 
+    drop ;
+
+
+---------------------------- 709 ----------------------------
+\\\\\ clock \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+WIRE(EAST, WEST)
+
+\@p b!                      
+\io
+\@p a!
+\NORTH
+
+\LOADR_4(1, 1, 1, 1)
+
+\jump 0
+    
+\: start
+\    dup or dup dup
+\: tick
+\    drop @p !b  
+\    0x155
+\    @p !
+\    0
+\    @p !b 
+\    0x8AA
+\    @p ! pop +
+\    0
+\    dup @p and 
+\    0x2000
+\    if tick
+\    drop drop pop  
+\    + dup @p 
+\    SOUTH
+\    a! ! @p 
+\    NORTH    
+\    a! dup dup   
+\    or dup
+\    jump tick
+
+
+
+
+\\\\\\ BUS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+---------------------------- 609 ----------------------------
+WIRE(NORTH, SOUTH)
+---------------------------- 509 ----------------------------
+WIRE(NORTH, SOUTH)
+---------------------------- 409 ----------------------------
+WIRE(NORTH, SOUTH)
+---------------------------- 309 ----------------------------
+WIRE(NORTH, SOUTH)
+---------------------------- 209 ----------------------------
+WIRE(NORTH, SOUTH)
+---------------------------- 109 ----------------------------
+WIRE(NORTH, SOUTH)
+---------------------------- 009 ----------------------------
+\\\\\\\ elbow \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+@p b!                      
+WEST
+@p a!
+NORTH
+
+jump 0
+
+: pass
+    @ dup or
+    !b jump pass
+
+
+\---------------------------- 007 ----------------------------
+\\\\\\\ data \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\@p b!
+\data
+\@p a!
+\EAST
+\
+\
+\@p !b @
+\0x02800   \reset pin state
+
+---------------------------- 713 ----------------------------
+\\\ joy V \\\\\\\\\\\\\\\\\
+
+@p a!
+data
+@p b! 
+io
+jump calib
+
+: calib
+    @p !b 
+    0x2000      \VDD Calib 
+    call samp
+    dup call set_tare
+    call print
+    @p b! 
+    io
+    @p !b
+    0x6000      \VSS Calib  
+    call get_tare   
+    call samp
+    call tare
+    call print
+    @p b!
+    io
+    @p !b
+    0x00153 \Pin calib
+: pin 
+    call get_tare   
+    call samp
+    call tare       
+    call print 
+    jump pin 
+
+: samp    
+    @p dup push 
+    15000       \33.33khz
+    ! @ dup .
+    unext ! @
+    - @p . + 
+    1
+    . + ;  
+ 
+: print
+    @p b! !b ; 
+    WEST   
+
+: set_tare
+    @p drop !p ;
+: get_tare    
+    @p ;
+    0 
+
+: tare
+    - . + .
+    - @p push
+    6
+    2/ unext @p .
+    0x1FF
+    or ;   
+
+
+
+---------------------------- 710 ----------------------------
+WIRE(EAST, WEST)        
+---------------------------- 711 ----------------------------
+WIRE(EAST, WEST)   
+---------------------------- 712 ----------------------------
+WIRE(EAST, WEST)    
+
