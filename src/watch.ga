@@ -1,7 +1,6 @@
 
 
 include(ga144.hdr)
-\include(708out.hdr)
 
 \ 128 * 128 = 16384 pixels 
 

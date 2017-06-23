@@ -1,0 +1,56 @@
+define(WIRE, `
+
+    @p a! @p
+        $1
+        $2
+    b!
+    jump 0
+    
+: again
+    @ !b
+    jump again
+
+')
+
+# LOADR must be before LOADD or you will trash your stack!! 
+
+define(LOADR_8, `
+    @p @p @p @p
+        $1
+        $2
+        $3
+        $4
+    @p @p @p @p
+        $5
+        $6
+        $7
+        $8
+    @p
+        $1
+    push push push
+    push push push
+    push push push')
+define(LOADR_4, `LOADR_8($1, $2, $3, $4, $1, $2, $3, $4)')
+define(LOADR_2, `LOADR_4($1, $2, $1, $2)')
+
+define(LOADD_8, `
+    @p @p @p @p
+        $1
+        $2
+        $3
+        $4
+    @p @p @p @p
+        $5
+        $6
+        $7
+        $8
+    @p @p
+        $1
+        $2')
+
+define(LOADD_4, `LOADD_8($1, $2, $3, $4, $1, $2, $3, $4)')
+
+define(LOADD_2, `LOADD_4($1, $2, $1, $2)')
+
+
+
