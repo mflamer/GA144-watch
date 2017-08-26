@@ -1219,3 +1219,335 @@ WIRE(EAST, WEST)
 ---------------------------- 712 ----------------------------
 WIRE(EAST, WEST)    
 
+---------------------------- 604 ----------------------------
+   @p a!
+   325
+   jump 15
+: __start
+: new
+    ! ! @p . 
+    0 
+    ! @  . 
+: update
+    @p dup dup . 
+    4 
+    ! ! ! . 
+    @  . . 
+    call delay
+    ; .
+: delete
+   @p over dup
+   3
+   ! ! !
+   @
+   call update
+   ;
+: main
+    @p @p . .  
+    260104 
+    81792
+    call new
+: again    
+    @p @p . . 
+    131384 
+    139283 
+    call new
+    @p @p . .
+    129352 
+    90004 
+    call new
+    @p @p . . 
+    260599 
+    16896 
+    call new
+    @p @p . . 
+    503 
+    49791
+    call new
+    @p @p . . 
+    129527 
+    33343 
+    call new
+    @p push
+    4
+: del
+    call delete
+    next del
+   jump again
+
+: delay
+    @p push . . 
+    262143 
+: _5
+    @p push . . 
+    100
+: _4
+    next _4
+    next _5
+    ; . . . 
+
+---------------------------- 304 ----------------------------
+   @p a!
+   325
+   @p b!
+   277
+   jump 0
+: __start
+: main
+    @ !b @ . 
+    !b @ !b . 
+    @b ! jump main
+
+
+---------------------------- 404 ----------------------------
+   @p a!
+   277
+   @p b!
+   325
+   jump 0
+: __start
+: main
+    @ !b @ . 
+    !b @ !b . 
+    @b ! jump main
+
+
+---------------------------- 504 ----------------------------
+   @p a!
+   325
+   @p b!
+   277
+   jump 0
+: __start
+: main
+    @ !b @ . 
+    !b @ !b . 
+    @b ! jump main
+
+---------------------------- 205 ----------------------------
+   @p a!
+   325
+   @p b!
+   469
+   jump 37
+: __start
+: update-list
+    @p . + dup 
+    -1 
+    push dup dup . 
+    or !b @p . 
+    127 
+    push . . . 
+: _28
+    pop dup push . 
+    - @p . + 
+    128 
+    2* 2* 2* . 
+    2* @p or . 
+    131075 
+    !b dup . . 
+    @p ! ! . 
+    @p push . . 
+    @p ! . . 
+    dup or a! . 
+    @p ! . . 
+    @+ !p unext . 
+    dup push . . 
+    @ !b unext . 
+    pop dup push . 
+    - @p . + 
+    129 
+    2* 2* 2* . 
+    2* 2* 2* . 
+    2* 2* @p + 
+    1 
+    !b next _28
+    pop . . . 
+    @p ! . . 
+    ; . . . 
+    ; . . . 
+: update-pix
+    ; . . . 
+: update
+    -if _34
+    jump update-pix
+: _34
+    jump update-list
+: main
+    @b @p b! . 
+    373 
+    call update
+    @p b! !b . 
+    469 
+    call main
+
+---------------------------- 204 ----------------------------
+   @p a!
+   277
+   @p b!
+   469
+   jump 33
+: __start
+    jump new
+    jump get
+    jump set
+    jump delete
+    jump update
+: new
+    call @empty
+    dup push ! . 
+    @ call !empty
+    call @len
+    dup ! @p . 
+    2 
+    + call !len
+    ! ! pop ; 
+: get
+    ; . . . 
+: set
+    ! ! ! ; 
+: delete
+    dup ! . . 
+    call @empty
+    ! call !empty
+    call @len
+    @p . + dup 
+    -2 
+    dup ! ! . 
+    jump !len
+: update
+    call @len
+    !b @b ; . 
+: update*
+    dup or - . 
+    !b @b ; . 
+: !len
+    @p drop !p ; 
+: @len
+    @p ; . . 
+    0 
+: !empty
+    @p drop !p ; 
+: @empty
+    @p ; . . 
+    1 
+: main
+    @ @ @ dup 
+    push @p a! . 
+    325 
+    ! ex . . 
+    @p a! ! . 
+    277 
+    jump main
+
+
+---------------------------- 104 ----------------------------
+   @p b!
+   325
+   jump 55
+: __start
+    jump new
+    jump get
+    jump sett
+    jump delete
+    jump update
+: set
+    @p ! ! ; 
+    @p a! . . 
+: fetch
+    call set
+: @next
+    @p ! @ ; 
+    @+ !p . . 
+: store
+    call set
+: !next
+    @p ! ! ; 
+    @p !+ . . 
+: update
+    @p a! . . 
+    469 
+    @p ! . . 
+    call 325  \ ---u
+    ; . . . 
+: new
+    @b dup push . 
+    call fetch
+    !b @b dup . 
+    pop over over . 
+    call store
+    over call store
+    drop @p a! . 
+    469 
+    @b over . . 
+    call store
+    @b jump !next
+: get
+    ; . . . 
+: sett
+    ; . . . 
+: delete
+    @b dup . . 
+    call fetch
+    push @b over . 
+    call store
+    @b call fetch
+    dup push over . 
+    over - @p . 
+    1 
+    + . + . 
+    if _40
+    drop over @p . 
+    -1 
+    + call store
+    pop pop dup . 
+    push over . . 
+    call store
+    @p a! pop . 
+    469 
+    @b call fetch
+    call @next
+    push over . . 
+    call store
+    pop jump !next
+: _40
+    pop pop @b ; 
+: main
+    @p a! @b . 
+    373 
+    push ex . . 
+    jump main
+
+
+---------------------------- 105 ----------------------------
+   jump 469
+: __start
+
+
+---------------------------- 103 ----------------------------
+   jump 373
+: __start
+    0 
+    3 
+    0 
+    5 
+    0 
+    7 
+    0 
+    9 
+    0 
+    11 
+    0 
+    13 
+    0 
+    15 
+    0 
+    17 
+    0 
+    19 
+    0 
+    21 
+    0 
+    23 
+    0 
+    25 
