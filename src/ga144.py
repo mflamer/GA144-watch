@@ -2,6 +2,7 @@ import sys
 import time
 import struct
 from subprocess import Popen, PIPE
+import platform
 
 mnemonics = {
     0x00  : ";",
@@ -396,7 +397,7 @@ class GA144:
     def loadprogram(self, sourcefile):
         code = {}
         c = []
-        p1 = Popen(["m4", sourcefile], stdout = PIPE, shell=True)
+        p1 = Popen(["m4", sourcefile], stdout = PIPE, shell=(platform.system() != "Linux"))
         for l in p1.stdout:
         #for l in open(sourcefile):
             if l[0] == '-':
