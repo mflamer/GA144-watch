@@ -46,15 +46,9 @@ define(SPI_RD18, 0xD9) \18ibits
     io
     @p a!
     SOUTH \rdl-    
-    @p push
-    2              \num words to send
-: tx     
+: again
     @ call txCell
-    next tx
-    @p call txCell
-    0x00947   
-    jump 0xAA       \ROM cold, might freeze this node?
-
+    jump again
 : setT
     @p drop !p ;
 : txBit \ t x n - t x 
@@ -173,6 +167,9 @@ WEST
 jump 0
 
 : main
+@p !b
+5551
+@ \stall
     @p call push
     0x69
     @p call push
@@ -422,7 +419,7 @@ jump 11
 : char     
 : line   
     
-: clear\needs to convert at end of pipe
+: clear \needs to convert at end of pipe
     dup or !b  
     jump fast
 
