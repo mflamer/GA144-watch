@@ -1149,24 +1149,27 @@ WIRE(EAST, WEST)
 ---------------------------- 604 ----------------------------
    @p a!
    325
-   jump 15
+   jump 18
 : __start
 : new
-    ! ! @p . 
+    dup ! !
+    ! @p !
     0 
-    ! @  . 
+    @ @ drop
 : update
-    @p dup dup . 
+    @p dup dup dup
     4 
     ! ! ! . 
-    @  . . 
+    ! @ @
+    drop \ drop 
     call delay
     ; .
 : delete
-   @p over dup
+   @p over dup dup
    3
    ! ! !
-   @
+   ! @ @
+   drop drop
    call update
    ;
 : main
@@ -1218,12 +1221,13 @@ WIRE(EAST, WEST)
    325
    @p b!
    277
-   jump 0
 : __start
 : main
     @ !b @ . 
     !b @ !b . 
-    @b ! jump main
+    @ !b @b . 
+    ! @b ! . 
+    jump main
 
 
 ---------------------------- 404 ----------------------------
@@ -1231,25 +1235,26 @@ WIRE(EAST, WEST)
    277
    @p b!
    325
-   jump 0
 : __start
 : main
     @ !b @ . 
     !b @ !b . 
-    @b ! jump main
-
+    @ !b @b . 
+    ! @b ! . 
+    jump main
 
 ---------------------------- 504 ----------------------------
    @p a!
    325
    @p b!
    277
-   jump 0
 : __start
 : main
     @ !b @ . 
     !b @ !b . 
-    @b ! jump main
+    @ !b @b . 
+    ! @b ! . 
+    jump main
 
 ---------------------------- 205 ----------------------------
    @p a!
@@ -1359,14 +1364,13 @@ WIRE(EAST, WEST)
     @p ; . . 
     1 
 : main
-    @ @ @ dup 
-    push @p a! . 
+    @ @ @ . 
+    @ dup push @p 
     325 
-    ! ex . . 
+    a! ! ex . 
     @p a! ! . 
     277 
-    jump main
-
+    ! jump main
 
 ---------------------------- 104 ----------------------------
    @p b!
