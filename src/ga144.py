@@ -216,6 +216,7 @@ class Node():
     def load(self, prg):
         self.log('---------- ' + self.name + ' ----------')
         lines = [l for l in prg.split("\n") if l]
+        last_prefix_word = []
         for p in (0, 1):
             self.setpass(p)
             prefix = []     # the prefix part of the node's program
@@ -244,10 +245,16 @@ class Node():
                             print msg
                             sys.exit(1)
                         self.lst('%02x: %05x     %s' % (len(ops), opcode & 0x3ffff, ol))
+                        if prefix is target:
+                            last_prefix_word = s
                         target.append(opcode)
                 else:
                     self.lst('%02x:           %s' % (len(ops), ol))
-        self.prefix = prefix + [self.assemble("jump 0".split())]
+        #self.prefix = prefix + [self.assemble("jump 0".split())]
+        if 'jump' in last_prefix_word or 'call' in last_prefix_word:
+            self.prefix = prefix
+        else:
+            self.prefix = prefix + [self.assemble("jump 0".split())]
         self.load_pgm = ops
         self.bgcolor = (0, 0, .1)
 
