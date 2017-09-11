@@ -2,7 +2,6 @@ import sys
 import time
 import struct
 from subprocess import Popen, PIPE
-import platform
 
 mnemonics = {
     0x00  : ";",
@@ -86,7 +85,10 @@ class Node():
     def __init__(self, name):
         self.name = name
         self.symbols = {}
+        self.symbols['lsh'] = 0xd9
+        self.symbols['rsh'] = 0xdb
         self.symbols.update(self.labels)
+        self.attr = {}
         self.listing = []
         row = int(name[0])
         col = int(name[1:3])
@@ -157,9 +159,12 @@ class Node():
     def pass1_term(self, n):
         if n in self.symbols:
             return self.symbols[n]
+        if '.' in n:
+            # handle a symbol in another node e.g. "605.emit"
+            (n, sym) = n.split('.')
+            return self.chip.node[n].symbols[sym]
         else:
-            return eval(n)
-            # return int(n, 0)
+            return eval(n, self.symbols)
 
     def bad_dest_0(self, pc, dest, dm):
         return False
@@ -218,6 +223,9 @@ class Node():
             target = prefix
             BACKSLASH = "\\"
             for lineno, ol in enumerate(lines, 1):
+                if p == 0 and BACKSLASH + ' attr:' in ol:
+                    v = ol.split()
+                    self.attr[v[2]] = v[3:]
                 if BACKSLASH in ol:
                     l = ol[:ol.index(BACKSLASH)]
                 else:
@@ -235,15 +243,11 @@ class Node():
                             print l
                             print msg
                             sys.exit(1)
-                        self.lst('%02x: %05x     %s' % (len(ops), opcode, ol))
+                        self.lst('%02x: %05x     %s' % (len(ops), opcode & 0x3ffff, ol))
                         target.append(opcode)
                 else:
                     self.lst('%02x:           %s' % (len(ops), ol))
-        # self.prefix = prefix + [self.assemble("jump 0".split())]            
-        if len(prefix) == 0:
-            self.prefix = [self.assemble("jump 0".split())]
-        else:
-            self.prefix = prefix    
+        self.prefix = prefix + [self.assemble("jump 0".split())]
         self.load_pgm = ops
         self.bgcolor = (0, 0, .1)
 
@@ -350,6 +354,9 @@ class GA144:
                 id = "%d%02d" % (r, c)
                 self.node[id].w = self.node["%d%02d" % (r, c - 1)]
 
+        for n in self.node.values():
+            n.chip = self
+
     def bootstream(self):
         r = []
         # path = ['SOUTH', 'SOUTH', 'SOUTH', 'SOUTH', 'SOUTH', 'SOUTH', 'SOUTH', 'WEST']
@@ -395,15 +402,19 @@ class GA144:
         self.paint_color = color
 
     def loadprogram(self, sourcefile):
+        self.order = []
         code = {}
         c = []
-        p1 = Popen(["m4", sourcefile], stdout = PIPE, shell=(platform.system() != "Linux"))
+        p1 = Popen("m4 " + sourcefile, stdout = PIPE, shell=True)
+        log = open("log", "w")
         for l in p1.stdout:
-        #for l in open(sourcefile):
+        # for l in open(sourcefile):
+            log.write(l)
             if l[0] == '-':
                 n = l.split()[1]
                 c = []
                 code[n] = c
+                self.order.append(n)
             else:
                 c.append(l)
         for n,c in sorted(code.items()):
@@ -411,26 +422,30 @@ class GA144:
             self.node[n].bgcolor = self.paint_color
 
     def active(self):
-        return [id for (id,n) in self.node.items() if n.isactive()]
+        return {id:n for (id,n) in self.node.items() if n.isactive()}
 
     def render(self, ctx, cairo):
         for n in self.node.values():
             n.render(ctx, cairo)
 
+    def send(self, ser):
+        ser.setRTS(0)   # Reboot by dropping RTS
+        time.sleep(.01)
+        ser.setRTS(1)
+        # ser.dsrdtr = True
+        ser.write(self.async())
+        ser.flush()
+        
     def download(self, port, speed, listen = True):
         import serial
         ser = serial.Serial(port, speed)
-        ser.setRTS(1)
-        time.sleep(0.1)
-        ser.setRTS(0)   # Reboot by dropping RTS
-        ser.setRTS(1)
-        #ser.dsrdtr = True
-        ser.write(self.async())
-        ser.flush()
+        self.send(ser)
         self.announce("DOWNLOAD COMPLETE")
         if not listen:
             time.sleep(0.1)
         t0 = time.time()
+        if not listen:
+            return ser
         while listen:
             s = ser.read(4)
             (v, ) = struct.unpack("<I", s)
@@ -440,9 +455,8 @@ class GA144:
                     printable = "'%c'" % v
                 else:
                     printable = ""
-                print "[%.6f]" % (time.time() - t0),
+                print "[%.3f]" % (time.time() - t0),
                 print "0x%05x  %d   %s" % (v & 0x3ffff, v & 0x3ffff, printable)
-
                 if (v & 0xffff) == 0x1111:
                     t0 = time.time()
                 if (v & 0xffff) == 0x2222:
@@ -451,7 +465,5 @@ class GA144:
                     ser.write(self.sget([1]))
                     # ser.flush()
                 if v == 0x00947:
-                    time.sleep(0.1)                   
                     return
                 t0 = time.time()
-                
