@@ -930,7 +930,7 @@ call jump
 jump new
 . . . .
 . . . .
-. . . .
+jump delete
 jump update
 : jump
 pop .  +
@@ -941,6 +941,11 @@ push ;
  @ !b
  !b
  @b ! @b ;
+: delete
+dup dup !b
+!b @ !b
+!b @b !
+@b ;
 : update
 push !b !b
 !b pop !b
