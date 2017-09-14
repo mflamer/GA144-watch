@@ -918,74 +918,36 @@ WIRE(EAST, WEST)
 WIRE(EAST, WEST)    
 
 ---------------------------- 604 ----------------------------
-   @p a!
-   325
-   jump 18
-: __start
+\ vm interface
+@p a!
+  EAST
+@p b!
+  SOUTH
+: run
+@ dup
+call command
+jump run
+: command
+call jump
+jump new
+. . . .
+. . . .
+. . . .
+jump update
+: jump
+pop .  +
+push ;
 : new
-    dup ! !
-    ! @p !
-    0 
-    @ @ drop
+ dup !b 
+ @ !b
+ @ !b
+ !b
+ @b ! @b ;
 : update
-    @p dup dup dup
-    4 
-    ! ! ! . 
-    ! @ @
-    drop \ drop 
-    call delay
-    ; .
-: delete
-   @p over dup dup
-   3
-   ! ! !
-   ! @ @
-   drop drop
-   call update
-   ;
-: main
-    @p @p . .  
-    260104 
-    81792
-    call new
-: again    
-    @p @p . . 
-    131384 
-    139283 
-    call new
-    @p @p . .
-    129352 
-    90004 
-    call new
-    @p @p . . 
-    260599 
-    16896 
-    call new
-    @p @p . . 
-    503 
-    49791
-    call new
-    @p @p . . 
-    129527 
-    33343 
-    call new
-    @p push
-    4
-: del
-    call delete
-    next del
-   jump again
+push !b !b
+!b pop !b
+@b ! @b ; 
 
-: delay
-    @p push . . 
-    262143 
-: _5
-    @p push . . 
-    100
-: _4
-    next _4
-    next _5
-    ; . . . 
 
 ---------------------------- 304 ----------------------------
    @p a!
