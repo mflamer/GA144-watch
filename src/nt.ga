@@ -494,13 +494,14 @@ include(romSPI.hdr)
    325
    @p b!
    349
+   jump 0
 : __start
 : main
     @p push . . 
     3 
 : _2
     @p @p next _2
-: _40
+: _30
     341 
     170 
     @p push push . 
@@ -513,7 +514,6 @@ include(romSPI.hdr)
     2 
     @p @p @p @p 
     2 
-: _30
     2 
     2048 
     170 
@@ -526,7 +526,7 @@ include(romSPI.hdr)
     -if _23
     drop 2* . . 
     -if _25
-    drop 2* . . 
+    drop 2* 2* . 
     -if _27
     drop . . . 
     @p . . . 
@@ -536,16 +536,10 @@ include(romSPI.hdr)
     325 
     a! pop pop . 
     drop push 2* . 
-    2* -if _37
-    drop . . . 
-    @p . . . 
-    call _40
-    @p a! ! @p 
-    373 
-    325 
-    a! !b @p . 
+    -if _36
+    drop !b @p . 
     2 
-: _37
+: _36
     @p . . . 
     2 
 : _27
@@ -558,19 +552,20 @@ include(romSPI.hdr)
     pop pop . . 
     jump cycle
 
-
 ---------------------------- 710 ----------------------------
    @p a!
    469
    @p b!
    349
+   jump 34
 : __start
+: table
     jump main
     ; . . . 
     jump wait
-: 1s
+: 8hz
     call @waiting-time
-    if 8  \ 8hz
+    if _4
     . @p . + 
     -1 
     dup call !waiting-time
@@ -582,7 +577,7 @@ include(romSPI.hdr)
     277 
     349 
     b! . . . 
-: 8hz
+: _4
     @b @p and . 
     8192 
     if _17
@@ -612,7 +607,6 @@ include(romSPI.hdr)
     @p push ex . 
     373 
     ; . . . 
-
 
 ---------------------------- 715 ----------------------------
    @p a!
