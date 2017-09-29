@@ -997,8 +997,14 @@ push !b !b
    325
    @p b!
    469
-   jump 37
+   jump 39
 : __start
+: end-line
+    2* 2* 2* . 
+    2* 2* 2* . 
+    2* 2* @p + 
+    1 
+    !b ; . . 
 : update-list
     @p . + dup 
     -1 
@@ -1006,7 +1012,7 @@ push !b !b
     or !b @p . 
     127 
     push . . . 
-: _28
+: _30
     pop dup push . 
     - @p . + 
     128 
@@ -1025,11 +1031,8 @@ push !b !b
     pop dup push . 
     - @p . + 
     129 
-    2* 2* 2* . 
-    2* 2* 2* . 
-    2* 2* @p + 
-    1 
-    !b next _28
+    call end-line
+    next _30
     pop . . . 
     @p ! . . 
     ; . . . 
@@ -1037,9 +1040,9 @@ push !b !b
 : update-pix
     ; . . . 
 : update
-    -if _34
+    -if _36
     jump update-pix
-: _34
+: _36
     jump update-list
 : main
     @b @p b! . 
