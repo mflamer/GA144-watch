@@ -413,8 +413,10 @@ class GA144:
         self.order = []
         code = {}
         c = []
+        n = None
         p1 = Popen("m4 " + sourcefile, stdout = PIPE, shell=True)
         log = open("log", "w")
+        deps = {}
         for l in p1.stdout:
         # for l in open(sourcefile):
             log.write(l)
@@ -422,10 +424,26 @@ class GA144:
                 n = l.split()[1]
                 c = []
                 code[n] = c
+                deps[n] = []
                 self.order.append(n)
             else:
                 c.append(l)
-        for n,c in sorted(code.items()):
+                m = re.search('([0-9]{3})\.', l) #TODO: ignore comments
+                if n and m:
+                    other = m.group(1)
+                    if n != other and other not in deps[n]:
+                        deps[n].append(other)
+
+        dep_order = []
+        def add(node):
+            for dep in deps[node[0]]:
+                add((dep, code[dep]))
+            dep_order.append(node)
+
+        for node in sorted(code.items()):
+            add(node)
+
+        for n,c in dep_order:
             self.node[n].load("".join(c))
             self.node[n].bgcolor = self.paint_color
 
