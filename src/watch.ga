@@ -948,6 +948,7 @@ dup dup !b
 @b ;
 : update
 push !b !b
+dup dup or
 !b pop !b
 @b ! @b ; 
 
