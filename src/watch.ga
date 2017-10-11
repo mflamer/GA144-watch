@@ -1116,7 +1116,7 @@ dup dup or
    277
    @p b!
    325
-   jump 46
+   jump 42
 : __start
     jump new
     jump get
@@ -1127,16 +1127,12 @@ dup dup or
     @p a! ; . 
     277 
 : new
-    @b dup push . 
-    ! @ !b . 
-    @b dup pop . 
-    over over ! . 
-    ! over ! . 
-    ! drop @p . 
+    @b ! @ . 
+    !b @b dup . 
+    ! @p a! . 
     277 
-    a! @b over . 
-    ! ! @b . 
-    ! ; . . 
+    ! @b ! . 
+    @b ! ; . 
 : get
     @p a! ; . 
     277 
@@ -1152,7 +1148,7 @@ dup dup or
     - @p . + 
     1 
     . + . . 
-    if _29
+    if _25
     ! over @p . 
     -1 
     + ! ! . 
@@ -1165,7 +1161,7 @@ dup dup or
     @ push over . 
     ! ! pop . 
     ! ; . . 
-: _29
+: _25
     ! @p a! . 
     277 
     pop pop dup . 
@@ -1233,8 +1229,8 @@ dup dup or
     @p ! ! ; 
     @p !+ . . 
 : new
-    @b @b over . 
-    call store
+    @b call set
+    @b call !next
     @b jump !next
 : get
     ; . . . 
@@ -1264,7 +1260,7 @@ dup dup or
    277
    @p b!
    373
-   jump 31
+   jump 32
 : __start
     jump new
     jump get
@@ -1285,11 +1281,12 @@ dup dup or
     @p ! ! ; 
     @p !+ . . 
 : new
-    @b call fetch
-    !b @b @b . 
-    over call store
-    @b @b over . 
-    jump store
+    @b dup push . 
+    call fetch
+    !b @b dup . 
+    pop over over . 
+    call store
+    over jump store
 : get
     ; . . . 
 : sett
@@ -1299,12 +1296,12 @@ dup dup or
     !b @b @b . 
     over call store
     @b call fetch
-    !b @b if _24
+    !b @b if _25
     @b @b over . 
     call store
     @b @b over . 
     call store
-: _24
+: _25
     ; . . . 
 : update
     ; . . . 
@@ -1377,4 +1374,4 @@ dup dup or
     0 
     61 
     0 
-    63
+    63 
