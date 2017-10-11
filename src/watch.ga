@@ -953,11 +953,13 @@ dup dup or
 @b ! @b ; 
 
 
+
 ---------------------------- 304 ----------------------------
    @p a!
    325
    @p b!
    277
+   jump 0
 : __start
 : main
     @ !b @ . 
@@ -972,6 +974,7 @@ dup dup or
    277
    @p b!
    325
+   jump 0
 : __start
 : main
     @ !b @ . 
@@ -980,11 +983,13 @@ dup dup or
     ! @b ! . 
     jump main
 
+
 ---------------------------- 504 ----------------------------
    @p a!
    325
    @p b!
    277
+   jump 0
 : __start
 : main
     @ !b @ . 
@@ -998,7 +1003,7 @@ dup dup or
    325
    @p b!
    469
-   jump 39
+   jump 31
 : __start
 : end-line
     2* 2* 2* . 
@@ -1013,37 +1018,29 @@ dup dup or
     or !b @p . 
     127 
     push . . . 
-: _30
+: _24
     pop dup push . 
     - @p . + 
     128 
     2* 2* 2* . 
     2* @p or . 
     131075 
-    !b dup . . 
-    @p ! ! . 
-    @p push . . 
-    @p ! . . 
-    dup or a! . 
-    @p ! . . 
-    @+ !p unext . 
-    dup push . . 
+    !b dup ! dup 
+    push . . . 
     @ !b unext . 
     pop dup push . 
     - @p . + 
     129 
     call end-line
-    next _30
-    pop . . . 
-    @p ! . . 
-    ; . . . 
-    ; . . . 
+    next _24
+    dup or ! . 
+    pop ; . . 
 : update-pix
     ; . . . 
 : update
-    -if _36
+    -if _28
     jump update-pix
-: _36
+: _28
     jump update-list
 : main
     @b @p b! . 
@@ -1052,6 +1049,7 @@ dup dup or
     @p b! !b . 
     469 
     call main
+
 
 ---------------------------- 204 ----------------------------
    @p a!
@@ -1112,10 +1110,109 @@ dup dup or
     277 
     ! jump main
 
+
 ---------------------------- 104 ----------------------------
+   @p a!
+   277
    @p b!
    325
-   jump 55
+   jump 46
+: __start
+    jump new
+    jump get
+    jump sett
+    jump delete
+    jump update
+: update
+    @p a! ; . 
+    277 
+: new
+    @b dup push . 
+    ! @ !b . 
+    @b dup pop . 
+    over over ! . 
+    ! over ! . 
+    ! drop @p . 
+    277 
+    a! @b over . 
+    ! ! @b . 
+    ! ; . . 
+: get
+    @p a! ; . 
+    277 
+: sett
+    @p a! ; . 
+    277 
+: delete
+    @b dup ! . 
+    @ push @b . 
+    over ! ! . 
+    @b ! @ dup 
+    push over over . 
+    - @p . + 
+    1 
+    . + . . 
+    if _29
+    ! over @p . 
+    -1 
+    + ! ! . 
+    pop pop dup . 
+    push over ! . 
+    ! @p dup . 
+    277 
+    a! ! pop . 
+    @b ! @ . 
+    @ push over . 
+    ! ! pop . 
+    ! ; . . 
+: _29
+    ! @p a! . 
+    277 
+    pop pop dup . 
+    or ! @b ; 
+: main
+    @b dup ! @p 
+    373 
+    a! dup ! . 
+    push ex . . 
+    jump main
+
+
+---------------------------- 005 ----------------------------
+   jump 469
+: __start
+
+
+---------------------------- 105 ----------------------------
+   @p a!
+   277
+   @p b!
+   325
+   jump 0
+: __start
+: main
+    @b if _0
+    dup push . . 
+    @p ! ! . 
+    @p push . . 
+    @p ! . . 
+    dup or a! . 
+    @p ! . . 
+    @+ !p unext . 
+    @ !b unext . 
+    jump main
+: _0
+    @p ! . . 
+    ; . . . 
+    jump main
+
+
+---------------------------- 004 ----------------------------
+   @p a!
+   469
+   @p b!
+   277
+   jump 29
 : __start
     jump new
     jump get
@@ -1135,22 +1232,8 @@ dup dup or
 : !next
     @p ! ! ; 
     @p !+ . . 
-: update
-    @p a! . . 
-    469 
-    @p ! . . 
-    call 325  \ ---u
-    ; . . . 
 : new
-    @b dup push . 
-    call fetch
-    !b @b dup . 
-    pop over over . 
-    call store
-    over call store
-    drop @p a! . 
-    469 
-    @b over . . 
+    @b @b over . 
     call store
     @b jump !next
 : get
@@ -1158,45 +1241,80 @@ dup dup or
 : sett
     ; . . . 
 : delete
-    @b dup . . 
-    call fetch
-    push @b over . 
-    call store
+    @b if _18
     @b call fetch
-    dup push over . 
-    over - @p . 
-    1 
-    + . + . 
-    if _40
-    drop over @p . 
-    -1 
-    + call store
-    pop pop dup . 
-    push over . . 
-    call store
-    @p a! pop . 
+    !b call @next
+    !b @b @b . 
+    over call store
+    @b call !next
+: _18
+    ; . . . 
+: update
+    @p a! . . 
     469 
-    @b call fetch
-    call @next
-    push over . . 
-    call store
-    pop jump !next
-: _40
-    pop pop @b ; 
+    @p ! ; . 
+    call 277  \ -d--
 : main
-    @p a! @b . 
-    373 
-    push ex . . 
+    @b push ex . 
     jump main
 
 
----------------------------- 105 ----------------------------
-   jump 469
-: __start
-
-
 ---------------------------- 103 ----------------------------
-   jump 373
+   @p a!
+   277
+   @p b!
+   373
+   jump 31
+: __start
+    jump new
+    jump get
+    jump sett
+    jump delete
+    jump update
+: set
+    @p ! ! ; 
+    @p a! . . 
+: fetch
+    call set
+: @next
+    @p ! @ ; 
+    @+ !p . . 
+: store
+    call set
+: !next
+    @p ! ! ; 
+    @p !+ . . 
+: new
+    @b call fetch
+    !b @b @b . 
+    over call store
+    @b @b over . 
+    jump store
+: get
+    ; . . . 
+: sett
+    ; . . . 
+: delete
+    @b call fetch
+    !b @b @b . 
+    over call store
+    @b call fetch
+    !b @b if _24
+    @b @b over . 
+    call store
+    @b @b over . 
+    call store
+: _24
+    ; . . . 
+: update
+    ; . . . 
+: main
+    @b push ex . 
+    jump main
+
+
+---------------------------- 003 ----------------------------
+   jump 277
 : __start
     0 
     3 
@@ -1259,5 +1377,4 @@ dup dup or
     0 
     61 
     0 
-    63 
-
+    63
