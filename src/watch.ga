@@ -922,7 +922,7 @@ WIRE(EAST, WEST)
 @p b!
   SOUTH
 : run
-@ dup !b
+@ dup
 call command
 jump run
 : command
@@ -931,19 +931,31 @@ jump new
 . . . .
 . . . .
 jump delete
-jump update
+jump update-mode
+jump update-quick
 : jump
 pop .  +
 push ;
 : new
+!b
  @ !b
  @ !b
  @b ! ;
 : delete
-  @ !b ;
-: update
-;
-\  @b ! ;
+  !b @ !b ;
+: update-mode
+  !b
+: update-loop
+  @ if end-update
+  !b jump update-loop
+: end-update
+  !b ;
+: update-quick
+@p @p !b
+ 1 \ update-list
+ 4 \ update-mode
+ !b dup or
+ !b ;
 
 
 ---------------------------- 304 ----------------------------
@@ -951,7 +963,7 @@ push ;
    325
    @p b!
    277
-   jump 16
+   jump 19
 : __start
     jump new
     jump get
@@ -973,6 +985,11 @@ push ;
 : update
     dup dup dup . 
     !b !b !b . 
+    !b . . . 
+: update-loop
+    @ if _16
+    !b jump update-loop
+: _16
     !b @b ; . 
 : main
     @ dup push . 
@@ -985,7 +1002,7 @@ push ;
    277
    @p b!
    325
-   jump 11
+   jump 13
 : __start
     jump new
     jump get
@@ -1002,7 +1019,10 @@ push ;
 : delete
     @ !b ; . 
 : update
-    ; . . . 
+    @ if _10
+    !b jump update
+: _10
+    !b ; . . 
 : main
     @ dup !b . 
     push ex . . 
@@ -1014,7 +1034,7 @@ push ;
    325
    @p b!
    277
-   jump 11
+   jump 13
 : __start
     jump new
     jump get
@@ -1031,11 +1051,15 @@ push ;
 : delete
     @ !b ; . 
 : update
-    ; . . . 
+    @ if _10
+    !b jump update
+: _10
+    !b ; . . 
 : main
     @ dup !b . 
     push ex . . 
     jump main
+
 
 ---------------------------- 205 ----------------------------
    @p a!
@@ -1044,6 +1068,8 @@ push ;
    469
    jump 31
 : __start
+    jump again
+    jump update-list
 : end-line
     2* 2* 2* . 
     2* 2* 2* . 
@@ -1057,7 +1083,7 @@ push ;
     or !b @p . 
     127 
     push . . . 
-: _24
+: _26
     pop dup push . 
     - @p . + 
     128 
@@ -1071,23 +1097,20 @@ push ;
     - @p . + 
     129 
     call end-line
-    next _24
+    next _26
     dup or ! . 
     pop ; . . 
-: update-pix
-    ; . . . 
-: update
-    -if _28
-    jump update-pix
-: _28
-    jump update-list
+: again
+    @p b! . . 
+    469 
 : main
+    @b . . . 
+: command-loop
     @b @p b! . 
     373 
-    call update
-    @p b! !b . 
+    push ex . . 
+    @p b! jump command-loop
     469 
-    call main
 
 
 ---------------------------- 204 ----------------------------
@@ -1095,7 +1118,7 @@ push ;
    277
    @p b!
    469
-   jump 33
+   jump 38
 : __start
     jump new
     jump get
@@ -1125,8 +1148,15 @@ push ;
     dup ! ! . 
     jump !len
 : update
+    @p a! . . 
+    277 
     call @len
-    !b @b ; . 
+    !b . . . 
+: update-loop
+    @ if _27
+    !b jump update-loop
+: _27
+    !b ; . . 
 : update*
     dup or - . 
     !b @b ; . 
@@ -1413,4 +1443,5 @@ push ;
     0 
     61 
     0 
-    63 
+    63
+    
