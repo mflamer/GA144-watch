@@ -940,8 +940,7 @@ push ;
  @ !b
  @b ! ;
 : delete
-  @ !b
-  @b ! ;
+  @ !b ;
 : update
 ;
 \  @b ! ;
@@ -970,7 +969,7 @@ push ;
 : delete
     dup dup !b . 
     !b @ !b . 
-    !b @b ! ; 
+    !b @b ; . 
 : update
     dup dup dup . 
     !b !b !b . 
@@ -986,7 +985,7 @@ push ;
    277
    @p b!
    325
-   jump 12
+   jump 11
 : __start
     jump new
     jump get
@@ -1001,8 +1000,7 @@ push ;
 : set
     ; . . . 
 : delete
-    @ !b @b . 
-    ! ; . . 
+    @ !b ; . 
 : update
     ; . . . 
 : main
@@ -1016,7 +1014,7 @@ push ;
    325
    @p b!
    277
-   jump 12
+   jump 11
 : __start
     jump new
     jump get
@@ -1031,15 +1029,13 @@ push ;
 : set
     ; . . . 
 : delete
-    @ !b @b . 
-    ! ; . . 
+    @ !b ; . 
 : update
     ; . . . 
 : main
     @ dup !b . 
     push ex . . 
     jump main
-
 
 ---------------------------- 205 ----------------------------
    @p a!
