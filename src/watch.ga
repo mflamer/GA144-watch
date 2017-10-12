@@ -922,7 +922,7 @@ WIRE(EAST, WEST)
 @p b!
   SOUTH
 : run
-@ dup
+@ dup !b
 call command
 jump run
 : command
@@ -936,36 +936,44 @@ jump update
 pop .  +
 push ;
 : new
- dup !b 
  @ !b
  @ !b
- !b
- @b ! @b ;
+ @b ! ;
 : delete
-dup dup !b
-!b @ !b
-!b @b !
-@b ;
+  @ !b
+  @b ! ;
 : update
-push !b !b
-dup dup or
-!b pop !b
-@b ! @b ; 
-
-
+  @b ! ;
 
 ---------------------------- 304 ----------------------------
    @p a!
    325
    @p b!
    277
-   jump 0
+   jump 12
 : __start
-: main
-    @ !b @ . 
+    jump new
+    jump get
+    jump set
+    jump delete
+    jump update
+: new
     !b @ !b . 
-    @ !b @b . 
-    ! @b ! . 
+    @ !b ; . 
+: get
+    ; . . . 
+: set
+    ; . . . 
+: delete
+    !b !b @ . 
+    !b ; . . 
+: update
+    !b !b !b ; 
+: main
+    @ dup dup . 
+    push push ex . 
+    pop !b @b . 
+    ! @b . . 
     jump main
 
 
@@ -974,13 +982,28 @@ dup dup or
    277
    @p b!
    325
-   jump 0
+   jump 12
 : __start
-: main
+    jump new
+    jump get
+    jump set
+    jump delete
+    jump update
+: new
     @ !b @ . 
-    !b @ !b . 
+    !b @b ! ; 
+: get
+    ; . . . 
+: set
+    ; . . . 
+: delete
     @ !b @b . 
-    ! @b ! . 
+    ! ; . . 
+: update
+    @b ! ; . 
+: main
+    @ dup !b . 
+    push ex . . 
     jump main
 
 
@@ -989,13 +1012,28 @@ dup dup or
    325
    @p b!
    277
-   jump 0
+   jump 12
 : __start
-: main
+    jump new
+    jump get
+    jump set
+    jump delete
+    jump update
+: new
     @ !b @ . 
-    !b @ !b . 
+    !b @b ! ; 
+: get
+    ; . . . 
+: set
+    ; . . . 
+: delete
     @ !b @b . 
-    ! @b ! . 
+    ! ; . . 
+: update
+    @b ! ; . 
+: main
+    @ dup !b . 
+    push ex . . 
     jump main
 
 ---------------------------- 205 ----------------------------
