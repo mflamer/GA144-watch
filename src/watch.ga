@@ -1066,51 +1066,69 @@ push ;
    325
    @p b!
    469
-   jump 31
+   jump 42
 : __start
     jump again
-    jump update-list
-: end-line
+    jump update-display
+    !b ; . . 
+    jump update-row
+    jump set-row
+    jump end-row
+: end-row
     2* 2* 2* . 
     2* 2* 2* . 
     2* 2* @p + 
     1 
     !b ; . . 
-: update-list
-    @p . + dup 
-    -1 
-    push dup dup . 
-    or !b @p . 
-    127 
-    push . . . 
-: _26
-    pop dup push . 
-    - @p . + 
-    128 
+: set-row
     2* 2* 2* . 
     2* @p or . 
     131075 
-    !b dup ! dup 
+    !b ; . . 
+: update-row
+    dup call set-row
+    over ! over . 
+    push . . . 
+    @ !b unext @p 
+    1 
+    . + . . 
+    jump end-row
+: update-display
+    drop dup push dup 
+    dup or !b @p 
+    127 
+    push . . . 
+: _37
+    pop dup push . 
+    - @p . + 
+    128 
+    call set-row
+    dup ! dup . 
     push . . . 
     @ !b unext . 
     pop dup push . 
     - @p . + 
     129 
-    call end-line
-    next _26
+    call end-row
+    next _37
     dup or ! . 
     pop ; . . 
 : again
     @p b! . . 
     469 
 : main
-    @b . . . 
+    @b @p . + 
+    -1 
 : command-loop
-    @b @p b! . 
+    @b @p b! dup 
     373 
-    push ex . . 
-    @p b! jump command-loop
+    @p and push . 
+    7 
+    2/ 2/ 2/ . 
+    ex . . . 
+    @p b! . . 
     469 
+    jump command-loop
 
 
 ---------------------------- 204 ----------------------------
@@ -1443,5 +1461,4 @@ push ;
     0 
     61 
     0 
-    63
-    
+    63 
