@@ -1066,14 +1066,15 @@ push ;
    325
    @p b!
    469
-   jump 42
+   jump 44
 : __start
-    jump again
+    jump end-update
     jump update-display
     !b ; . . 
     jump update-row
     jump set-row
     jump end-row
+    jump send-prims*
 : end-row
     2* 2* 2* . 
     2* 2* 2* . 
@@ -1085,20 +1086,23 @@ push ;
     2* @p or . 
     131075 
     !b ; . . 
+: send-prims*
+    drop dup . . 
+: send-prims
+    dup ! push . 
+    @ !b unext ; 
 : update-row
     dup call set-row
-    over ! over . 
-    push . . . 
-    @ !b unext @p 
+    over call send-prims
+    @p . + . 
     1 
-    . + . . 
     jump end-row
 : update-display
     drop dup push dup 
     dup or !b @p 
     127 
     push . . . 
-: _37
+: _39
     pop dup push . 
     - @p . + 
     128 
@@ -1110,22 +1114,26 @@ push ;
     - @p . + 
     129 
     call end-row
-    next _37
-    dup or ! . 
+    next _39
     pop ; . . 
-: again
-    @p b! . . 
+: end-update
+    dup or ! @p 
     469 
+    b! . . . 
 : main
     @b @p . + 
     -1 
 : command-loop
-    @b @p b! dup 
+    @b @p b! . 
     373 
-    @p and push . 
+    -if _48
+    !b jump done
+: _48
+    dup @p and . 
     7 
-    2/ 2/ 2/ . 
-    ex . . . 
+    push 2/ 2/ . 
+    2/ ex . . 
+: done
     @p b! . . 
     469 
     jump command-loop
