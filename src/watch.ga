@@ -1066,7 +1066,7 @@ push ;
    325
    @p b!
    469
-   jump 39
+   jump 43
 : __start
     jump end-update
     jump update-display
@@ -1092,8 +1092,11 @@ push ;
 : send-prims*
     drop dup . . 
 : send-prims
+    if _19
     dup ! push . 
-    @ !b unext ; 
+    @ !b unext . 
+: _19
+    ; . . . 
 : update-row
     dup call set-row
     over call send-prims
@@ -1101,30 +1104,34 @@ push ;
     1 
     jump end-row
 : update-display
-    drop dup dup dup 
+    drop if _28
+    dup dup dup . 
     or !b @p . 
     127 
     push . . . 
-: _34
+: _37
     pop dup push . 
     - @p . + 
     128 
     call update-row
-    next _34
+    next _37
     ; . . . 
+: _28
+    jump clear-display
 : end-update
     dup or ! @p 
     469 
     b! . . . 
 : main
-    @b @p . + 
+    @b if command-loop
+    @p . + . 
     -1 
 : command-loop
     @b @p b! . 
     373 
-    -if _43
+    -if _48
     !b jump done
-: _43
+: _48
     dup @p and . 
     7 
     push 2/ 2/ . 
