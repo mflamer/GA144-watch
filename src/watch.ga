@@ -1475,26 +1475,291 @@ push ;
     63 
 
 
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\ wire and GPIO nodes
+
+
+
+---------------------------- 316 ----------------------------
+   @p a!
+   325
+   @p b!
+   349
+   jump 0
+: __start
+: main
+    @ @b @p . 
+    32768 
+    and if _2
+    drop @p a! . 
+    469 
+    @ or @p . 
+    325 
+    a! . . . 
+: _2
+    ! jump main
+
+
+---------------------------- 416 ----------------------------
+   @p a!
+   277
+   @p b!
+   349
+   jump 8
+: __start
+: read-press
+    @b @p and . 
+    32768 
+    if _2
+    @p a! @ @p 
+    469 
+    325 
+    a! ; . . 
+: _2
+    dup or ; . 
+: main
+    @ @p a! . 
+    325 
+    ! call read-press
+    @ or @p . 
+    277 
+    a! ! jump main
+
+
+---------------------------- 516 ----------------------------
+   @p a!
+   325
+   @p b!
+   349
+   jump 8
+: __start
+: read-press
+    @b @p and . 
+    32768 
+    if _2
+    @p a! @ @p 
+    469 
+    277 
+    a! ; . . 
+: _2
+    dup or ; . 
+: main
+    @ @p a! . 
+    277 
+    ! call read-press
+    @ or @p . 
+    325 
+    a! ! jump main
+
+
+---------------------------- 317 ----------------------------
+   @p b!
+   349
+   jump 0
+: __start
+: poll
+    @p a! @p . 
+    373 
+    0 
+    b! @ @p . 
+    2048 
+    b! @ @p . 
+    469 
+    a! @p ! . 
+    32768 
+    jump poll
+
+
+---------------------------- 417 ----------------------------
+   @p b!
+   349
+   jump 0
+: __start
+: poll
+    @p a! @p . 
+    373 
+    0 
+    b! @ @p . 
+    2048 
+    b! @ @p . 
+    469 
+    a! @p ! . 
+    65536 
+    jump poll
+
+
+---------------------------- 517 ----------------------------
+   @p b!
+   349
+   jump 0
+: __start
+: main
+    @p a! @p . 
+    373 
+    0 
+    b! @ @p . 
+    2048 
+    b! @ @p . 
+    469 
+    a! @p ! . 
+    131072 
+    jump main
+
+
+---------------------------- 616 ----------------------------
+   @p a!
+   373
+   @p b!
+   325
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+: main
+    @ push ex . 
+    call main
+: read-gpio
+    dup dup or . 
+    !b @b ! ; 
+
+
+---------------------------- 615 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+
+
+---------------------------- 614 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+
+
+---------------------------- 613 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+
+
+---------------------------- 612 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+
+
+---------------------------- 611 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    jump sleep
+    jump wait
+    jump read-gpio
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: sleep
+    ; . . . 
+: wait
+    ; . . . 
+: read-gpio
+    @b ! ; . 
+
+
 ---------------------------- 610 ----------------------------
    @p a!
    373
    @p b!
    469
+   jump 5
 : __start
     jump main
     ; . . . 
+    jump sleep
     jump wait
+    jump read-gpio
 : main
-    @ dup push . 
-    ex . . . 
+    @ dup dup . 
+    !b push ex . 
     call main
-: wait
+: sleep
     @p b! !b . 
     277 
     @ !b @ . 
     !b @b ! @p 
     469 
     b! ; . . 
+: wait
+    @p b! @b . 
+    277 
+    ! @p b! ; 
+    469 
+: read-gpio
+    @b ! ; . 
 
 
 ---------------------------- 609 ----------------------------
@@ -1502,18 +1767,24 @@ push ;
    469
    @p b!
    373
+   jump 5
 : __start
     jump main
     ; . . . 
+    jump sleep
     jump wait
+    jump read-gpio
 : main
-    @ dup push . 
-    ex . . . 
+    @ dup !b . 
+    push ex . . 
     jump main
+: sleep
+    @ !b @ . 
+    !b @b ! ; 
 : wait
-    !b @ !b . 
-    @ !b @b . 
-    ! ; . . 
+    ; . . . 
+: read-gpio
+    @b ! ; . 
 
 
 ---------------------------- 608 ----------------------------
@@ -1521,23 +1792,29 @@ push ;
    373
    @p b!
    469
+   jump 0
 : __start
     jump run
     jump emit
+    jump sleep
     jump wait
+    jump read-gpio
 : run
-    @ dup push . 
-    ex . . . 
+    @ dup !b . 
+    push ex . . 
     jump run
 : emit
     @p b! @ . 
     277 
     !b @p b! ; 
     469 
+: sleep
+    @ !b @ . 
+    !b @b ! ; 
 : wait
-    !b @ !b . 
-    @ !b @b . 
-    ! ; . . 
+    ; . . . 
+: read-gpio
+    @b ! ; . 
 
 
 ---------------------------- 607 ----------------------------
@@ -1545,17 +1822,21 @@ push ;
    469
    @p b!
    373
+   jump 5
 : __start
     jump main
     @ !b ; . 
+    jump sleep
     jump wait
+    jump read-gpio
 : main
     @ dup !b . 
     push ex . . 
     jump main
-: wait
+: sleep
     @ !b @ . 
     !b @b ! ; 
-
-
-
+: wait
+    ; . . . 
+: read-gpio
+    @b ! ; . 
