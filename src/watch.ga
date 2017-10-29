@@ -1473,3 +1473,89 @@ push ;
     61 
     0 
     63 
+
+
+---------------------------- 610 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+: __start
+    jump main
+    ; . . . 
+    jump wait
+: main
+    @ dup push . 
+    ex . . . 
+    call main
+: wait
+    @p b! !b . 
+    277 
+    @ !b @ . 
+    !b @b ! @p 
+    469 
+    b! ; . . 
+
+
+---------------------------- 609 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+: __start
+    jump main
+    ; . . . 
+    jump wait
+: main
+    @ dup push . 
+    ex . . . 
+    jump main
+: wait
+    !b @ !b . 
+    @ !b @b . 
+    ! ; . . 
+
+
+---------------------------- 608 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+: __start
+    jump run
+    jump emit
+    jump wait
+: run
+    @ dup push . 
+    ex . . . 
+    jump run
+: emit
+    @p b! @ . 
+    277 
+    !b @p b! ; 
+    469 
+: wait
+    !b @ !b . 
+    @ !b @b . 
+    ! ; . . 
+
+
+---------------------------- 607 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+: __start
+    jump main
+    @ !b ; . 
+    jump wait
+: main
+    @ dup !b . 
+    push ex . . 
+    jump main
+: wait
+    @ !b @ . 
+    !b @b ! ; 
+
+
+
