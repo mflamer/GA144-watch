@@ -1479,31 +1479,6 @@ push ;
 \\  wait and sleep
 
 
----------------------------- 611 ----------------------------
-   @p a!
-   469
-   @p b!
-   373
-: __start
-    jump main
-    ; . . . 
-    jump wait
-: main
-    @ dup !b . 
-    push ex . . 
-    call main
-: wait
-    @p a! . . 
-    277 
-: loop
-    @ -if _8
-    - @p a! . 
-    469 
-    ! ; . . 
-: _8
-    !b @b ! . 
-    jump loop
-
 ---------------------------- 709 ----------------------------
    @p a!
    325
@@ -1516,7 +1491,6 @@ push ;
     3 
 : _2
     @p @p next _2
-: _30
     341 
     170 
     @p push push . 
@@ -1535,13 +1509,15 @@ push ;
 : cycle
     over or dup . 
     !b dup ! . 
+: _39
     over or dup . 
+: _30
     !b dup ! . 
     push push 2* . 
     -if _23
     drop 2* . . 
     -if _25
-    drop 2* 2* . 
+    drop 2* . . 
     -if _27
     drop . . . 
     @p . . . 
@@ -1551,8 +1527,14 @@ push ;
     325 
     a! pop pop . 
     drop push 2* . 
-    -if _36
-    drop !b @p . 
+    2* -if _36
+    drop . . . 
+    @p . . . 
+    call _39
+    @p a! ! @p 
+    373 
+    325 
+    a! !b @p . 
     2 
 : _36
     @p . . . 
@@ -1567,67 +1549,132 @@ push ;
     pop pop . . 
     jump cycle
 
+
+---------------------------- 711 ----------------------------
+   @p a!
+   469
+   @p b!
+   277
+   jump 3
+: __start
+: end-wait
+    dup dup or dup 
+    !b over !b . 
+    call !waiting
+: main
+    @ if _3
+    call !waiting
+    jump main
+: _3
+    call update
+    jump main
+: check-time
+    -if _8
+    call @timer-period
+    . + . . 
+    call !wait-time
+    dup or . . 
+    call end-wait
+: _8
+    ; . . . 
+: update
+    call @wait-time
+    @p . + dup 
+    -1 
+    call !wait-time
+    call @waiting
+    if _20
+    drop call check-time
+    @p !b @b . 
+    1 
+    if _24
+    call end-wait
+: _24
+    ; . . . 
+: _20
+    ; . . . 
+: !waiting
+    @p drop !p ; 
+: @waiting
+    @p ; . . 
+    0 
+: !wait-time
+    @p drop !p ; 
+: @wait-time
+    @p ; . . 
+    7 
+: @timer-period
+    @p ; . . 
+    8 
+
+
 ---------------------------- 710 ----------------------------
    @p a!
    469
    @p b!
    349
-   jump 34
+   jump 37
 : __start
-: table
     jump main
     ; . . . 
+    jump sleep
     jump wait
-: 8hz
-    call @waiting-time
-    if _4
-    . @p . + 
+: update-sleep
+    call @sleep-time
+    if _5
+    @p . + dup 
     -1 
-    dup call !waiting-time
-    if _8
+    call !sleep-time
+    if _9
     ; . . . 
-: _8
-    call @waiting-fragment
+: _9
     @p b! !b @p 
     277 
     349 
     b! . . . 
-: _4
+: _5
+    ; . . . 
+: >711
+    @p b! !b @p 
+    469 
+    349 
+    b! ; . . 
+: update
+    jump update-sleep
+: 8hz
+    dup or call >711
     @b @p and . 
     8192 
-    if _17
+    if _24
     @p b! @b dup 
     277 
     push ex . . 
     @p b! . . 
     349 
-: _17
+: _24
     ; . . . 
+: sleep
+    @b . . . 
+: !sleep-time
+    @p drop !p ; 
+: @sleep-time
+    @p ; . . 
+    0 
 : wait
-    @b @p . + 
+    @p jump >711
     1 
-    call !waiting-fragment
-    @b jump !waiting-time
-: !waiting-fragment
-    @p drop !p ; 
-: @waiting-fragment
-    @p ; . . 
-    0 
-: !waiting-time
-    @p drop !p ; 
-: @waiting-time
-    @p ; . . 
-    0 
 : main
     @p push ex . 
     373 
     ; . . . 
+
 
 ---------------------------- 715 ----------------------------
    @p a!
    325
    @p b!
    349
+   jump 20
 : __start
     jump main
 : -osc
@@ -1684,6 +1731,7 @@ push ;
 
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 \\ wire and GPIO nodes
+
 
 ---------------------------- 316 ----------------------------
    @p a!
@@ -1920,19 +1968,27 @@ push ;
 : __start
     jump main
     ; . . . 
-    jump sleep
+    ; . . . 
     jump wait
     jump read-gpio
 : main
     @ dup !b . 
     push ex . . 
     call main
-: sleep
-    ; . . . 
-: wait
-    ; . . . 
 : read-gpio
     @b ! ; . 
+: wait
+    @p a! . . 
+    277 
+: loop
+    @ if _11
+    @p !b @b . 
+    4 
+    ! jump loop
+: _11
+    @ @p a! . 
+    469 
+    ! ; . . 
 
 
 ---------------------------- 610 ----------------------------
@@ -1946,25 +2002,22 @@ push ;
     ; . . . 
     jump sleep
     jump wait
-    jump read-gpio
+    @b ! ; . 
 : main
     @ dup dup . 
     !b push ex . 
-    call main
+    jump main
 : sleep
     @p b! !b . 
     277 
-    @ !b @ . 
-    !b @b ! @p 
-    469 
-    b! ; . . 
-: wait
-    @p b! @b . 
-    277 
+    @ !b @b . 
     ! @p b! ; 
     469 
-: read-gpio
-    @b ! ; . 
+: wait
+    @p b! !b @p 
+    277 
+    469 
+    b! @b ! ; 
 
 
 ---------------------------- 609 ----------------------------
@@ -1977,19 +2030,15 @@ push ;
     jump main
     ; . . . 
     jump sleep
-    jump wait
-    jump read-gpio
+    @b ! ; . 
+    @b ! ; . 
 : main
     @ dup !b . 
     push ex . . 
     jump main
 : sleep
-    @ !b @ . 
-    !b @b ! ; 
-: wait
-    ; . . . 
-: read-gpio
-    @b ! ; . 
+    @ !b @b . 
+    ! ; . . 
 
 
 ---------------------------- 608 ----------------------------
@@ -2002,8 +2051,8 @@ push ;
     jump run
     jump emit
     jump sleep
-    jump wait
-    jump read-gpio
+    @b ! ; . 
+    @b ! ; . 
 : run
     @ dup !b . 
     push ex . . 
@@ -2014,12 +2063,8 @@ push ;
     !b @p b! ; 
     469 
 : sleep
-    @ !b @ . 
-    !b @b ! ; 
-: wait
-    ; . . . 
-: read-gpio
-    @b ! ; . 
+    @ !b @b . 
+    ! ; . . 
 
 
 ---------------------------- 607 ----------------------------
@@ -2032,16 +2077,12 @@ push ;
     jump main
     @ !b ; . 
     jump sleep
-    jump wait
-    jump read-gpio
+    @b ! ; . 
+    @b ! ; . 
 : main
     @ dup !b . 
     push ex . . 
     jump main
 : sleep
-    @ !b @ . 
-    !b @b ! ; 
-: wait
-    ; . . . 
-: read-gpio
-    @b ! ; . 
+    @ !b @b . 
+    ! ; . . 
