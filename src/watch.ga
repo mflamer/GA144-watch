@@ -855,15 +855,26 @@ jump 0
 @p a!
 data
 @p b! 
-io
-jump calib
-
+SOUTH
+jump run
+: table
+  jump calib
+  jump sample
+  jump delta
+: run
+  @b push @p
+  io
+  b! ex
+  @p
+  SOUTH
+  b! !b
+  jump run
 : calib
     @p !b 
     0x2000      \VDD Calib 
     call samp
     dup call set_tare
-    call print
+\    call print
     @p b! 
     io
     @p !b
@@ -871,17 +882,20 @@ jump calib
     call get_tare   
     call samp
     call tare
-    call print
+\    call print
     @p b!
     io
     @p !b
     0x00153 \Pin calib
-: pin 
+    ;
+
+: sample
     call get_tare   
     call samp
     call tare       
-    call print 
-    jump pin 
+\    call print 
+\    jump pin 
+   ;
 
 : samp    
     @p dup push 
@@ -909,7 +923,22 @@ jump calib
     2/ unext @p .
     0x1FF
     or ;   
-
+: delta
+  call sample
+  dup
+  call get-last-val
+  - . +
+  over
+  call set-last-val
+  -if ret
+    -
+: ret  
+  ;
+: set-last-val
+  @p drop !p ;
+: get-last-val
+  @p ;
+  0
 ---------------------------- 711 ----------------------------
 WIRE(EAST, WEST)   
 ---------------------------- 712 ----------------------------
@@ -1733,6 +1762,7 @@ push ;
 \\ wire and GPIO nodes
 
 
+
 ---------------------------- 316 ----------------------------
    @p a!
    325
@@ -1904,13 +1934,14 @@ push ;
    373
    @p b!
    469
-   jump 5
+   jump 6
 : __start
     jump main
     ; . . . 
     ; . . . 
     ; . . . 
     jump read-gpio
+    ; . . . 
 : main
     @ dup !b . 
     push ex . . 
@@ -1924,19 +1955,26 @@ push ;
    469
    @p b!
    373
-   jump 5
+   jump 6
 : __start
     jump main
     ; . . . 
     ; . . . 
     ; . . . 
     jump read-gpio
+    jump joy-y
 : main
     @ dup !b . 
     push ex . . 
     call main
 : read-gpio
     @b ! ; . 
+: joy-y
+    @p b! @ . 
+    277 
+    !b @b ! @p 
+    373 
+    b! ; . . 
 
 
 ---------------------------- 612 ----------------------------
@@ -1944,19 +1982,23 @@ push ;
    373
    @p b!
    469
-   jump 5
+   jump 6
 : __start
     jump main
     ; . . . 
     ; . . . 
     ; . . . 
     jump read-gpio
+    jump joy-y
 : main
     @ dup !b . 
     push ex . . 
     call main
 : read-gpio
     @b ! ; . 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
 
 
 ---------------------------- 611 ----------------------------
@@ -1964,13 +2006,14 @@ push ;
    469
    @p b!
    373
-   jump 5
+   jump 6
 : __start
     jump main
     ; . . . 
     ; . . . 
     jump wait
     jump read-gpio
+    jump joy-y
 : main
     @ dup !b . 
     push ex . . 
@@ -1981,13 +2024,16 @@ push ;
     @p a! . . 
     277 
 : loop
-    @ if _11
+    @ if _12
     @p !b @b . 
     4 
     ! jump loop
-: _11
+: _12
     @ @p a! . 
     469 
+    ! ; . . 
+: joy-y
+    @ !b @b . 
     ! ; . . 
 
 
@@ -1996,13 +2042,14 @@ push ;
    373
    @p b!
    469
-   jump 5
+   jump 6
 : __start
     jump main
     ; . . . 
     jump sleep
     jump wait
     @b ! ; . 
+    jump joy-y
 : main
     @ dup dup . 
     !b push ex . 
@@ -2018,6 +2065,9 @@ push ;
     277 
     469 
     b! @b ! ; 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
 
 
 ---------------------------- 609 ----------------------------
@@ -2025,18 +2075,22 @@ push ;
    469
    @p b!
    373
-   jump 5
+   jump 6
 : __start
     jump main
     ; . . . 
     jump sleep
     @b ! ; . 
     @b ! ; . 
+    jump joy-y
 : main
     @ dup !b . 
     push ex . . 
     jump main
 : sleep
+    @ !b @b . 
+    ! ; . . 
+: joy-y
     @ !b @b . 
     ! ; . . 
 
@@ -2053,6 +2107,7 @@ push ;
     jump sleep
     @b ! ; . 
     @b ! ; . 
+    jump joy-y
 : run
     @ dup !b . 
     push ex . . 
@@ -2065,6 +2120,9 @@ push ;
 : sleep
     @ !b @b . 
     ! ; . . 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
 
 
 ---------------------------- 607 ----------------------------
@@ -2072,17 +2130,21 @@ push ;
    469
    @p b!
    373
-   jump 5
+   jump 6
 : __start
     jump main
     @ !b ; . 
     jump sleep
     @b ! ; . 
     @b ! ; . 
+    jump joy-y
 : main
     @ dup !b . 
     push ex . . 
     jump main
 : sleep
+    @ !b @b . 
+    ! ; . . 
+: joy-y
     @ !b @b . 
     ! ; . . 
