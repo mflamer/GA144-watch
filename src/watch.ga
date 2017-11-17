@@ -1525,6 +1525,7 @@ push ;
     @p push push . 
     341 
     push push push . 
+: _30
     push push push . 
     push @p @p @p 
     0 
@@ -1538,15 +1539,13 @@ push ;
 : cycle
     over or dup . 
     !b dup ! . 
-: _39
     over or dup . 
-: _30
     !b dup ! . 
     push push 2* . 
     -if _23
     drop 2* . . 
     -if _25
-    drop 2* . . 
+    drop 2* 2* . 
     -if _27
     drop . . . 
     @p . . . 
@@ -1556,14 +1555,8 @@ push ;
     325 
     a! pop pop . 
     drop push 2* . 
-    2* -if _36
-    drop . . . 
-    @p . . . 
-    call _39
-    @p a! ! @p 
-    373 
-    325 
-    a! !b @p . 
+    -if _36
+    drop !b @p . 
     2 
 : _36
     @p . . . 
@@ -1642,45 +1635,42 @@ push ;
    469
    @p b!
    349
-   jump 37
+   jump 36
 : __start
     jump main
     ; . . . 
     jump sleep
     jump wait
-: update-sleep
-    call @sleep-time
-    if _5
-    @p . + dup 
-    -1 
-    call !sleep-time
-    if _9
-    ; . . . 
-: _9
-    @p b! !b @p 
-    277 
-    349 
-    b! . . . 
-: _5
-    ; . . . 
 : >711
     @p b! !b @p 
     469 
     349 
     b! ; . . 
-: update
-    jump update-sleep
 : 8hz
-    dup or call >711
+    dup or . . 
+    call >711
+    call @sleep-time
+    if _11
+    @p . + dup 
+    -1 
+    call !sleep-time
+    if _15
+    ; . . . 
+: _15
+    @p b! !b @p 
+    277 
+    349 
+    b! ; . . 
+: _11
     @b @p and . 
     8192 
-    if _24
+    if _23
     @p b! @b dup 
     277 
     push ex . . 
     @p b! . . 
     349 
-: _24
+: _23
     ; . . . 
 : sleep
     @b . . . 
@@ -1756,7 +1746,6 @@ push ;
 : run
     !b !b @ . 
     drop jump run
-
 
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 \\ wire and GPIO nodes
