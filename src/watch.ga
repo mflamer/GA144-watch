@@ -855,15 +855,26 @@ jump 0
 @p a!
 data
 @p b! 
-io
-jump calib
-
+SOUTH
+jump run
+: table
+  jump calib
+  jump sample
+  jump delta
+: run
+  @b push @p
+  io
+  b! ex
+  @p
+  SOUTH
+  b! !b
+  jump run
 : calib
     @p !b 
     0x2000      \VDD Calib 
     call samp
     dup call set_tare
-    call print
+\    call print
     @p b! 
     io
     @p !b
@@ -871,17 +882,20 @@ jump calib
     call get_tare   
     call samp
     call tare
-    call print
+\    call print
     @p b!
     io
     @p !b
     0x00153 \Pin calib
-: pin 
+    ;
+
+: sample
     call get_tare   
     call samp
     call tare       
-    call print 
-    jump pin 
+\    call print 
+\    jump pin 
+   ;
 
 : samp    
     @p dup push 
@@ -909,7 +923,22 @@ jump calib
     2/ unext @p .
     0x1FF
     or ;   
-
+: delta
+  call sample
+  dup
+  call get-last-val
+  - . +
+  over
+  call set-last-val
+  -if ret
+    -
+: ret  
+  ;
+: set-last-val
+  @p drop !p ;
+: get-last-val
+  @p ;
+  0
 ---------------------------- 711 ----------------------------
 WIRE(EAST, WEST)   
 ---------------------------- 712 ----------------------------
@@ -931,25 +960,31 @@ jump new
 . . . .
 . . . .
 jump delete
-jump update
+jump update-mode
+jump update-quick
 : jump
 pop .  +
 push ;
 : new
- dup !b 
+!b
  @ !b
  @ !b
- !b
- @b ! @b ;
+ @b ! ;
 : delete
-dup dup !b
-!b @ !b
-!b @b !
-@b ;
-: update
-push !b !b
-!b pop !b
-@b ! @b ; 
+  !b @ !b ;
+: update-mode
+  !b
+: update-loop
+  @ if end-update
+  !b jump update-loop
+: end-update
+  !b ;
+: update-quick
+@p @p !b
+ 1 \ update-list
+ 4 \ update-mode
+ !b dup or
+ !b ;
 
 
 ---------------------------- 304 ----------------------------
@@ -957,13 +992,38 @@ push !b !b
    325
    @p b!
    277
+   jump 19
 : __start
-: main
-    @ !b @ . 
+    jump new
+    jump get
+    jump set
+    jump delete
+    jump update
+: new
+    dup !b @ . 
     !b @ !b . 
-    @ !b @b . 
-    ! @b ! . 
-    jump main
+    !b @b ! ; 
+: get
+    ; . . . 
+: set
+    ; . . . 
+: delete
+    dup dup !b . 
+    !b @ !b . 
+    !b @b ; . 
+: update
+    dup dup dup . 
+    !b !b !b . 
+    !b . . . 
+: update-loop
+    @ if _16
+    !b jump update-loop
+: _16
+    !b @b ; . 
+: main
+    @ dup push . 
+    ex . . . 
+    @b jump main
 
 
 ---------------------------- 404 ----------------------------
@@ -971,90 +1031,152 @@ push !b !b
    277
    @p b!
    325
+   jump 13
 : __start
-: main
+    jump new
+    jump get
+    jump set
+    jump delete
+    jump update
+: new
     @ !b @ . 
-    !b @ !b . 
-    @ !b @b . 
-    ! @b ! . 
+    !b @b ! ; 
+: get
+    ; . . . 
+: set
+    ; . . . 
+: delete
+    @ !b ; . 
+: update
+    @ if _10
+    !b jump update
+: _10
+    !b ; . . 
+: main
+    @ dup !b . 
+    push ex . . 
     jump main
+
 
 ---------------------------- 504 ----------------------------
    @p a!
    325
    @p b!
    277
+   jump 13
 : __start
-: main
+    jump new
+    jump get
+    jump set
+    jump delete
+    jump update
+: new
     @ !b @ . 
-    !b @ !b . 
-    @ !b @b . 
-    ! @b ! . 
+    !b @b ! ; 
+: get
+    ; . . . 
+: set
+    ; . . . 
+: delete
+    @ !b ; . 
+: update
+    @ if _10
+    !b jump update
+: _10
+    !b ; . . 
+: main
+    @ dup !b . 
+    push ex . . 
     jump main
+
 
 ---------------------------- 205 ----------------------------
    @p a!
    325
    @p b!
    469
-   jump 37
+   jump 43
 : __start
-: update-list
-    @p . + dup 
-    -1 
-    push dup dup . 
-    or !b @p . 
-    127 
-    push . . . 
-: _28
-    pop dup push . 
-    - @p . + 
-    128 
-    2* 2* 2* . 
-    2* @p or . 
-    131075 
-    !b dup . . 
-    @p ! ! . 
-    @p push . . 
-    @p ! . . 
-    dup or a! . 
-    @p ! . . 
-    @+ !p unext . 
-    dup push . . 
-    @ !b unext . 
-    pop dup push . 
-    - @p . + 
-    129 
+    jump end-update
+    jump update-display
+    !b ; . . 
+    jump update-row
+    jump set-row
+    jump end-row
+    jump send-prims*
+: clear-display
+    @p !b ; . 
+    4 
+: end-row
     2* 2* 2* . 
     2* 2* 2* . 
     2* 2* @p + 
     1 
-    !b next _28
-    pop . . . 
-    @p ! . . 
+    !b ; . . 
+: set-row
+    2* 2* 2* . 
+    2* @p or . 
+    131075 
+    !b ; . . 
+: send-prims*
+    drop dup . . 
+: send-prims
+    if _19
+    dup ! push . 
+    @ !b unext . 
+: _19
     ; . . . 
+: update-row
+    dup call set-row
+    over call send-prims
+    @p . + . 
+    1 
+    jump end-row
+: update-display
+    drop if _28
+    dup dup dup . 
+    or !b @p . 
+    127 
+    push . . . 
+: _37
+    pop dup push . 
+    - @p . + 
+    128 
+    call update-row
+    next _37
     ; . . . 
-: update-pix
-    ; . . . 
-: update
-    -if _34
-    jump update-pix
-: _34
-    jump update-list
+: _28
+    jump clear-display
+: end-update
+    dup or ! @p 
+    469 
+    b! . . . 
 : main
+    @b if command-loop
+    @p . + . 
+    -1 
+: command-loop
     @b @p b! . 
     373 
-    call update
-    @p b! !b . 
+    -if _48
+    !b jump done
+: _48
+    dup @p and . 
+    7 
+    push 2/ 2/ . 
+    2/ ex . . 
+: done
+    @p b! . . 
     469 
-    call main
+    jump command-loop
+
 
 ---------------------------- 204 ----------------------------
    @p a!
    277
    @p b!
    469
-   jump 33
+   jump 38
 : __start
     jump new
     jump get
@@ -1084,8 +1206,15 @@ push !b !b
     dup ! ! . 
     jump !len
 : update
+    @p a! . . 
+    277 
     call @len
-    !b @b ; . 
+    !b . . . 
+: update-loop
+    @ if _27
+    !b jump update-loop
+: _27
+    !b ; . . 
 : update*
     dup or - . 
     !b @b ; . 
@@ -1108,10 +1237,105 @@ push !b !b
     277 
     ! jump main
 
+
 ---------------------------- 104 ----------------------------
+   @p a!
+   277
    @p b!
    325
-   jump 55
+   jump 42
+: __start
+    jump new
+    jump get
+    jump sett
+    jump delete
+    jump update
+: update
+    @p a! ; . 
+    277 
+: new
+    @b ! @ . 
+    !b @b dup . 
+    ! @p a! . 
+    277 
+    ! @b ! . 
+    @b ! ; . 
+: get
+    @p a! ; . 
+    277 
+: sett
+    @p a! ; . 
+    277 
+: delete
+    @b dup ! . 
+    @ push @b . 
+    over ! ! . 
+    @b ! @ dup 
+    push over over . 
+    - @p . + 
+    1 
+    . + . . 
+    if _25
+    ! over @p . 
+    -1 
+    + ! ! . 
+    pop pop dup . 
+    push over ! . 
+    ! @p dup . 
+    277 
+    a! ! pop . 
+    @b ! @ . 
+    @ push over . 
+    ! ! pop . 
+    ! ; . . 
+: _25
+    ! @p a! . 
+    277 
+    pop pop dup . 
+    or ! @b ; 
+: main
+    @b dup ! @p 
+    373 
+    a! dup ! . 
+    push ex . . 
+    jump main
+
+
+---------------------------- 005 ----------------------------
+   jump 469
+: __start
+
+
+---------------------------- 105 ----------------------------
+   @p a!
+   277
+   @p b!
+   325
+   jump 0
+: __start
+: main
+    @b if _0
+    dup push . . 
+    @p ! ! . 
+    @p push . . 
+    @p ! . . 
+    dup or a! . 
+    @p ! . . 
+    @+ !p unext . 
+    @ !b unext . 
+    jump main
+: _0
+    @p ! . . 
+    ; . . . 
+    jump main
+
+
+---------------------------- 004 ----------------------------
+   @p a!
+   469
+   @p b!
+   277
+   jump 29
 : __start
     jump new
     jump get
@@ -1131,68 +1355,90 @@ push !b !b
 : !next
     @p ! ! ; 
     @p !+ . . 
-: update
-    @p a! . . 
-    469 
-    @p ! . . 
-    call 325  \ ---u
-    ; . . . 
 : new
-    @b dup push . 
-    call fetch
-    !b @b dup . 
-    pop over over . 
-    call store
-    over call store
-    drop @p a! . 
-    469 
-    @b over . . 
-    call store
+    @b call set
+    @b call !next
     @b jump !next
 : get
     ; . . . 
 : sett
     ; . . . 
 : delete
-    @b dup . . 
-    call fetch
-    push @b over . 
-    call store
+    @b if _18
     @b call fetch
-    dup push over . 
-    over - @p . 
-    1 
-    + . + . 
-    if _40
-    drop over @p . 
-    -1 
-    + call store
-    pop pop dup . 
-    push over . . 
-    call store
-    @p a! pop . 
+    !b call @next
+    !b @b @b . 
+    over call store
+    @b call !next
+: _18
+    ; . . . 
+: update
+    @p a! . . 
     469 
-    @b call fetch
-    call @next
-    push over . . 
-    call store
-    pop jump !next
-: _40
-    pop pop @b ; 
+    @p ! ; . 
+    call 277  \ -d--
 : main
-    @p a! @b . 
-    373 
-    push ex . . 
+    @b push ex . 
     jump main
 
 
----------------------------- 105 ----------------------------
-   jump 469
-: __start
-
-
 ---------------------------- 103 ----------------------------
-   jump 373
+   @p a!
+   277
+   @p b!
+   373
+   jump 32
+: __start
+    jump new
+    jump get
+    jump sett
+    jump delete
+    jump update
+: set
+    @p ! ! ; 
+    @p a! . . 
+: fetch
+    call set
+: @next
+    @p ! @ ; 
+    @+ !p . . 
+: store
+    call set
+: !next
+    @p ! ! ; 
+    @p !+ . . 
+: new
+    @b dup push . 
+    call fetch
+    !b @b dup . 
+    pop over over . 
+    call store
+    over jump store
+: get
+    ; . . . 
+: sett
+    ; . . . 
+: delete
+    @b call fetch
+    !b @b @b . 
+    over call store
+    @b call fetch
+    !b @b if _25
+    @b @b over . 
+    call store
+    @b @b over . 
+    call store
+: _25
+    ; . . . 
+: update
+    ; . . . 
+: main
+    @b push ex . 
+    jump main
+
+
+---------------------------- 003 ----------------------------
+   jump 277
 : __start
     0 
     3 
@@ -1256,3 +1502,638 @@ push !b !b
     61 
     0 
     63 
+
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\  wait and sleep
+
+
+---------------------------- 709 ----------------------------
+   @p a!
+   325
+   @p b!
+   349
+   jump 0
+: __start
+: main
+    @p push . . 
+    3 
+: _2
+    @p @p next _2
+    341 
+    170 
+    @p push push . 
+    341 
+    push push push . 
+: _30
+    push push push . 
+    push @p @p @p 
+    0 
+    2 
+    2 
+    @p @p @p @p 
+    2 
+    2 
+    2048 
+    170 
+: cycle
+    over or dup . 
+    !b dup ! . 
+    over or dup . 
+    !b dup ! . 
+    push push 2* . 
+    -if _23
+    drop 2* . . 
+    -if _25
+    drop 2* 2* . 
+    -if _27
+    drop . . . 
+    @p . . . 
+    call _30
+    @p a! ! @p 
+    373 
+    325 
+    a! pop pop . 
+    drop push 2* . 
+    -if _36
+    drop !b @p . 
+    2 
+: _36
+    @p . . . 
+    2 
+: _27
+    @p . . . 
+    2 
+: _25
+    @p . . . 
+    2 
+: _23
+    pop pop . . 
+    jump cycle
+
+
+---------------------------- 711 ----------------------------
+   @p a!
+   469
+   @p b!
+   277
+   jump 3
+: __start
+: end-wait
+    dup dup or dup 
+    !b over !b . 
+    call !waiting
+: main
+    @ if _3
+    call !waiting
+    jump main
+: _3
+    call update
+    jump main
+: check-time
+    -if _8
+    call @timer-period
+    . + . . 
+    call !wait-time
+    dup or . . 
+    call end-wait
+: _8
+    ; . . . 
+: update
+    call @wait-time
+    @p . + dup 
+    -1 
+    call !wait-time
+    call @waiting
+    if _20
+    drop call check-time
+    @p !b @b . 
+    1 
+    if _24
+    call end-wait
+: _24
+    ; . . . 
+: _20
+    ; . . . 
+: !waiting
+    @p drop !p ; 
+: @waiting
+    @p ; . . 
+    0 
+: !wait-time
+    @p drop !p ; 
+: @wait-time
+    @p ; . . 
+    7 
+: @timer-period
+    @p ; . . 
+    8 
+
+
+---------------------------- 710 ----------------------------
+   @p a!
+   469
+   @p b!
+   349
+   jump 36
+: __start
+    jump main
+    ; . . . 
+    jump sleep
+    jump wait
+: >711
+    @p b! !b @p 
+    469 
+    349 
+    b! ; . . 
+: 8hz
+    dup or . . 
+    call >711
+    call @sleep-time
+    if _11
+    @p . + dup 
+    -1 
+    call !sleep-time
+    if _15
+    ; . . . 
+: _15
+    @p b! !b @p 
+    277 
+    349 
+    b! ; . . 
+: _11
+    @b @p and . 
+    8192 
+    if _23
+    @p b! @b dup 
+    277 
+    push ex . . 
+    @p b! . . 
+    349 
+: _23
+    ; . . . 
+: sleep
+    @b . . . 
+: !sleep-time
+    @p drop !p ; 
+: @sleep-time
+    @p ; . . 
+    0 
+: wait
+    @p jump >711
+    1 
+: main
+    @p push ex . 
+    373 
+    ; . . . 
+
+
+---------------------------- 715 ----------------------------
+   @p a!
+   325
+   @p b!
+   349
+   jump 20
+: __start
+    jump main
+: -osc
+    push . . . 
+: _10
+    @p !b dup . 
+    196608 
+    2/ dup push . 
+    unext @p !b . 
+    131072 
+    over @p and . 
+    1 
+    + push . . 
+    unext next _10
+    dup or !b dup 
+    @p push . . 
+    30000 
+: _16
+    drop @b - . 
+    -if _15
+    next _16
+    ; . . . 
+: _15
+    dup or pop . 
+    drop ; . . 
+: main
+    @p @p push . 
+    12895 
+    2000 
+: _29
+    dup @p . . 
+    5000 
+    call -osc
+    if prep
+    drop @p . + 
+    1 
+    next _29
+    jump main
+: prep
+    @p @p @p @p 
+    0 
+    131072 
+    2048 
+    198656 
+    @p @p @p @p 
+    0 
+    131072 
+    2048 
+    198656 
+: run
+    !b !b @ . 
+    drop jump run
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\ wire and GPIO nodes
+
+
+
+---------------------------- 316 ----------------------------
+   @p a!
+   325
+   @p b!
+   349
+   jump 0
+: __start
+: main
+    @ @b @p . 
+    32768 
+    and if _2
+    drop @p a! . 
+    469 
+    @ or @p . 
+    325 
+    a! . . . 
+: _2
+    ! jump main
+
+
+---------------------------- 416 ----------------------------
+   @p a!
+   277
+   @p b!
+   349
+   jump 8
+: __start
+: read-press
+    @b @p and . 
+    32768 
+    if _2
+    @p a! @ @p 
+    469 
+    325 
+    a! ; . . 
+: _2
+    dup or ; . 
+: main
+    @ @p a! . 
+    325 
+    ! call read-press
+    @ or @p . 
+    277 
+    a! ! jump main
+
+
+---------------------------- 516 ----------------------------
+   @p a!
+   325
+   @p b!
+   349
+   jump 8
+: __start
+: read-press
+    @b @p and . 
+    32768 
+    if _2
+    @p a! @ @p 
+    469 
+    277 
+    a! ; . . 
+: _2
+    dup or ; . 
+: main
+    @ @p a! . 
+    277 
+    ! call read-press
+    @ or @p . 
+    325 
+    a! ! jump main
+
+
+---------------------------- 317 ----------------------------
+   @p b!
+   349
+   jump 0
+: __start
+: poll
+    @p a! @p . 
+    373 
+    0 
+    b! @ @p . 
+    2048 
+    b! @ @p . 
+    469 
+    a! @p ! . 
+    32768 
+    jump poll
+
+
+---------------------------- 417 ----------------------------
+   @p b!
+   349
+   jump 0
+: __start
+: poll
+    @p a! @p . 
+    373 
+    0 
+    b! @ @p . 
+    2048 
+    b! @ @p . 
+    469 
+    a! @p ! . 
+    65536 
+    jump poll
+
+
+---------------------------- 517 ----------------------------
+   @p b!
+   349
+   jump 0
+: __start
+: main
+    @p a! @p . 
+    373 
+    0 
+    b! @ @p . 
+    2048 
+    b! @ @p . 
+    469 
+    a! @p ! . 
+    131072 
+    jump main
+
+
+---------------------------- 616 ----------------------------
+   @p a!
+   373
+   @p b!
+   325
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+: main
+    @ push ex . 
+    call main
+: read-gpio
+    dup dup or . 
+    !b @b ! ; 
+
+
+---------------------------- 615 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 5
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+
+
+---------------------------- 614 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+   jump 6
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+    ; . . . 
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+
+
+---------------------------- 613 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 6
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+    jump joy-y
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+: joy-y
+    @p b! @ . 
+    277 
+    !b @b ! @p 
+    373 
+    b! ; . . 
+
+
+---------------------------- 612 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+   jump 6
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    ; . . . 
+    jump read-gpio
+    jump joy-y
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
+
+
+---------------------------- 611 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 6
+: __start
+    jump main
+    ; . . . 
+    ; . . . 
+    jump wait
+    jump read-gpio
+    jump joy-y
+: main
+    @ dup !b . 
+    push ex . . 
+    call main
+: read-gpio
+    @b ! ; . 
+: wait
+    @p a! . . 
+    277 
+: loop
+    @ if _12
+    @p !b @b . 
+    4 
+    ! jump loop
+: _12
+    @ @p a! . 
+    469 
+    ! ; . . 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
+
+
+---------------------------- 610 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+   jump 6
+: __start
+    jump main
+    ; . . . 
+    jump sleep
+    jump wait
+    @b ! ; . 
+    jump joy-y
+: main
+    @ dup dup . 
+    !b push ex . 
+    jump main
+: sleep
+    @p b! !b . 
+    277 
+    @ !b @b . 
+    ! @p b! ; 
+    469 
+: wait
+    @p b! !b @p 
+    277 
+    469 
+    b! @b ! ; 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
+
+
+---------------------------- 609 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 6
+: __start
+    jump main
+    ; . . . 
+    jump sleep
+    @b ! ; . 
+    @b ! ; . 
+    jump joy-y
+: main
+    @ dup !b . 
+    push ex . . 
+    jump main
+: sleep
+    @ !b @b . 
+    ! ; . . 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
+
+
+---------------------------- 608 ----------------------------
+   @p a!
+   373
+   @p b!
+   469
+   jump 0
+: __start
+    jump run
+    jump emit
+    jump sleep
+    @b ! ; . 
+    @b ! ; . 
+    jump joy-y
+: run
+    @ dup !b . 
+    push ex . . 
+    jump run
+: emit
+    @p b! @ . 
+    277 
+    !b @p b! ; 
+    469 
+: sleep
+    @ !b @b . 
+    ! ; . . 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
+
+
+---------------------------- 607 ----------------------------
+   @p a!
+   469
+   @p b!
+   373
+   jump 6
+: __start
+    jump main
+    @ !b ; . 
+    jump sleep
+    @b ! ; . 
+    @b ! ; . 
+    jump joy-y
+: main
+    @ dup !b . 
+    push ex . . 
+    jump main
+: sleep
+    @ !b @b . 
+    ! ; . . 
+: joy-y
+    @ !b @b . 
+    ! ; . . 
